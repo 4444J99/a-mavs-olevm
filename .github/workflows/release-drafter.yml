@@ -9,7 +9,7 @@ permissions:
   pull-requests: write
 jobs:
   update_release_draft:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       pull-requests: write

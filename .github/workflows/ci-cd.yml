@@ -9,7 +9,7 @@ on:
 jobs:
   lint-and-format:
     name: Lint and Format Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -35,7 +35,7 @@ jobs:
 
   security-audit:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -55,7 +55,7 @@ jobs:
 
   lighthouse:
     name: Lighthouse CI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint-and-format]
 
     steps:
@@ -80,7 +80,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint-and-format]
 
     steps:
@@ -101,7 +101,7 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint-and-format]
 
     steps:
@@ -133,7 +133,7 @@ jobs:
 
   accessibility:
     name: Accessibility Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint-and-format]
 
     steps:
@@ -165,7 +165,7 @@ jobs:
 
   html-validate:
     name: HTML Validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint-and-format]
 
     steps:
@@ -186,7 +186,7 @@ jobs:
 
   link-checker:
     name: Link Checker
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint-and-format]
 
     steps:
@@ -207,7 +207,7 @@ jobs:
 
   build-exhibits:
     name: Build Absorb-Alchemize Exhibits
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint-and-format]
 
     steps:
@@ -240,7 +240,7 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       [
         lint-and-format,
