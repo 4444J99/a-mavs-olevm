@@ -17,7 +17,7 @@ jobs:
   # Move issues to "In Progress" when assigned
   move-assigned-issues:
     name: Update Issue on Assignment
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event_name == 'issues' && github.event.action == 'assigned'
 
     steps:
@@ -46,7 +46,7 @@ jobs:
   # Remove "in-progress" label when issue is unassigned
   remove-progress-on-unassign:
     name: Update Issue on Unassignment
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event_name == 'issues' && github.event.action == 'unassigned'
 
     steps:
@@ -76,7 +76,7 @@ jobs:
   # Auto-close issues when PR is merged
   close-issues-on-pr-merge:
     name: Close Issues on PR Merge
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: |
       github.event_name == 'pull_request' &&
       github.event.pull_request.merged == true &&
@@ -137,7 +137,7 @@ jobs:
   # Label PRs based on file changes
   label-pr-by-changes:
     name: Label PR by File Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
 
     steps:
@@ -213,7 +213,7 @@ jobs:
   # Mark PR as ready for review when it transitions from draft
   mark-ready-for-review:
     name: Mark PR Ready for Review
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: |
       github.event_name == 'pull_request' &&
       github.event.action == 'synchronize' &&
@@ -263,7 +263,7 @@ jobs:
   # Add merged label to closed PRs
   label-merged-pr:
     name: Label Merged PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: |
       (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') &&
       github.event.pull_request.merged == true &&
