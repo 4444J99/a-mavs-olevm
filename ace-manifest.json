@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0.0",
+  "system_id": "audiovisual-composition-system",
+  "repository": {
+    "github_id": 924834822
+  },
+  "software": {
+    "id": "generative-multimedia-spatial-environment",
+    "name": "Generative Multimedia Spatial Environment",
+    "responsibility": "Compose browser scenes, analyze audio features, mix spatial stems and sequence image-grid frames within existing authored web environments."
+  },
+  "capabilities": [
+    {
+      "id": "spatial-scene-composition",
+      "description": "Manage Three.js scene, camera, renderer, postprocessing and adaptive quality lifecycle."
+    },
+    {
+      "id": "audio-feature-analysis",
+      "description": "Analyze frequency bands and beat events for audiovisual reactivity."
+    },
+    {
+      "id": "stem-playback",
+      "description": "Play and spatially mix configured audio stems with existing legacy defaults and fallback paths."
+    },
+    {
+      "id": "frame-sequencing",
+      "description": "Advance image-grid frames using configured order and loop rules."
+    }
+  ],
+  "modules": [
+    {
+      "id": "spatial-scene-compositor",
+      "path": "js/3d/core/SceneManager.js",
+      "capability_ids": [
+        "spatial-scene-composition"
+      ],
+      "interfaces": [
+        "SceneManager"
+      ]
+    },
+    {
+      "id": "frequency-analyzer",
+      "path": "js/3d/audio/AudioAnalyzer.js",
+      "capability_ids": [
+        "audio-feature-analysis"
+      ],
+      "interfaces": [
+        "AudioAnalyzer"
+      ]
+    },
+    {
+      "id": "beat-detector",
+      "path": "js/3d/audio/BeatDetector.js",
+      "capability_ids": [
+        "audio-feature-analysis"
+      ],
+      "interfaces": [
+        "BeatDetector"
+      ]
+    },
+    {
+      "id": "spatial-stem-player",
+      "path": "js/3d/ogod/OGODAudioEngine.js",
+      "capability_ids": [
+        "stem-playback"
+      ],
+      "interfaces": [
+        "OGODAudioEngine (legacy global; artwork defaults remain)"
+      ]
+    },
+    {
+      "id": "image-grid-sequencer",
+      "path": "js/ogod/OGODFrameSequencer.js",
+      "capability_ids": [
+        "frame-sequencing"
+      ],
+      "interfaces": [
+        "OGODFrameSequencer (legacy global; artwork defaults remain)"
+      ]
+    }
+  ],
+  "source_media": [],
+  "compositions": [
+    {
+      "id": "chamber-web-composition",
+      "path": "index.html",
+      "artwork_id": "g-p-6ab7e73ded908191861a61f9f026db4b"
+    },
+    {
+      "id": "image-grid-album-composition",
+      "path": "OGOD.html",
+      "artwork_id": "g-p-6ab7e410fcd881919cf73a5e3e18bc77"
+    },
+    {
+      "id": "spatial-album-composition",
+      "path": "ogod-3d.html",
+      "artwork_id": "g-p-6ab7e410fcd881919cf73a5e3e18bc77"
+    }
+  ],
+  "artworks": [
+    {
+      "id": "g-p-6ab7e73ded908191861a61f9f026db4b",
+      "title": "mavsoleum-a",
+      "aliases": [
+        "a-mavs-olevm",
+        "The Pantheon"
+      ],
+      "publication_status": "unverified"
+    },
+    {
+      "id": "g-p-6ab7e410fcd881919cf73a5e3e18bc77",
+      "title": "OGOD",
+      "aliases": [
+        "| O | G | O | D |"
+      ],
+      "publication_status": "unverified"
+    }
+  ],
+  "editions": [],
+  "archives": [
+    {
+      "id": "design-document-archive",
+      "path": "docs/archive",
+      "description": "Preserved prior audio infrastructure proposal; intentions are not verified media or release evidence."
+    }
+  ]
+}

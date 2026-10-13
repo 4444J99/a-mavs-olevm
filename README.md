@@ -364,3 +364,7 @@ _Part of the [ORGAN-II: Poiesis](https://github.com/organvm-ii-poiesis) system -
 <sub>[Portfolio](https://4444j99.github.io/portfolio/) · [System Directory](https://4444j99.github.io/portfolio/directory/) · [ORGAN II · Poiesis](https://organvm-ii-poiesis.github.io/) · Part of the <a href="https://4444j99.github.io/portfolio/directory/">ORGANVM eight-organ system</a></sub>
 
 <!-- SYSTEM-NAV-END -->
+
+## Audiovisual Composition System identities
+
+The [typed ACE descriptor](ace-manifest.json) records functional software and module identities separately from artistic titles and compositions. See [responsibilities, compatibility and rollback](docs/ace-boundaries.md). Existing source identities, runtime paths and artwork titles are preserved.
