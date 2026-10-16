@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Platinum Sprint: CI/CD workflow, standardized badge row, ADR documentation
 - Initial CHANGELOG following Keep a Changelog format
 
+### Changed
+
+- Green CI confirmed on dependabot github_actions update at head 0c543b9 (workflow run 38849137129).
+
 ## [0.1.0] - 2026-02-11
 
 ### Added
