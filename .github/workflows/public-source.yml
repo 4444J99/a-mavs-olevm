@@ -38,7 +38,17 @@ jobs:
       - run: npm run validate:html
 
   browsers:
-    name: Browser and accessibility tests
+    name: Browser and accessibility tests (${{ matrix.project }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: chromium
+            browser: chromium
+          - project: firefox
+            browser: firefox
+          - project: Mobile Chrome
+            browser: chromium
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -50,13 +60,13 @@ jobs:
           node-version: '24.19.0'
           cache: npm
       - run: npm ci
-      - run: npx --no-install playwright install --with-deps chromium firefox
-      - run: npm test
+      - run: npx --no-install playwright install --with-deps "${{ matrix.browser }}"
+      - run: npm test -- --project="${{ matrix.project }}"
       - name: Preserve browser failure evidence
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: public-source-browser-report
+          name: public-source-browser-report-${{ matrix.project }}
           path: |
             playwright-report/
             test-results/
