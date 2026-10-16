@@ -44,11 +44,8 @@ jobs:
       matrix:
         include:
           - project: chromium
-            browser: chromium
           - project: firefox
-            browser: firefox
           - project: Mobile Chrome
-            browser: chromium
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -60,7 +57,18 @@ jobs:
           node-version: '24.19.0'
           cache: npm
       - run: npm ci
-      - run: npx --no-install playwright install --with-deps "${{ matrix.browser }}"
+      # Several specs launch Chromium directly, including in the Firefox project.
+      - run: npx --no-install playwright install --with-deps chromium firefox
+      - name: Provide an audio output for Firefox
+        if: matrix.project == 'firefox'
+        run: |
+          sudo apt-get install --yes --no-install-recommends pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci_audio rate=48000 channels=2
+          pactl set-default-sink ci_audio
+          test "$(pactl get-default-sink)" = ci_audio
+          pactl info
+          pactl list short sinks
       - run: npm test -- --project="${{ matrix.project }}"
       - name: Preserve browser failure evidence
         if: failure()
