@@ -19,20 +19,25 @@
 
   // Shared scripts used by multiple chambers (ScriptLoader deduplicates)
   const CAROUSEL = 'js/modules/Carousel.js';
-  const IMAGES = 'js/images.js';
+  // images.js and chamber initializers require Carousel and its image helpers.
+  const IMAGE_SCRIPTS = [CAROUSEL, 'js/images.js'];
   const DIARY = 'js/diary.js';
 
   // ── East Wing ──────────────────────────────────────────────
   loader.register('akademia', {
     html: 'chambers/akademia/fragment.html',
-    scripts: [IMAGES, 'akademia/config.js', 'js/akademia/AkademiaRenderer.js'],
+    scripts: [
+      ...IMAGE_SCRIPTS,
+      'akademia/config.js',
+      'js/akademia/AkademiaRenderer.js',
+    ],
     styles: [],
   });
 
   loader.register('bibliotheke', {
     html: 'chambers/bibliotheke/fragment.html',
     scripts: [
-      IMAGES,
+      ...IMAGE_SCRIPTS,
       'bibliotheke/config.js',
       'js/generative/BibliothekePoetry.js',
     ],
@@ -42,7 +47,7 @@
   loader.register('pinakotheke', {
     html: 'chambers/pinakotheke/fragment.html',
     scripts: [
-      IMAGES,
+      ...IMAGE_SCRIPTS,
       'pinakotheke/config.js',
       'js/generative/PinakothekeGenerator.js',
     ],
@@ -52,19 +57,19 @@
   // ── West Wing ──────────────────────────────────────────────
   loader.register('agora', {
     html: 'chambers/agora/fragment.html',
-    scripts: [IMAGES, 'agora/config.js'],
+    scripts: [...IMAGE_SCRIPTS, 'agora/config.js'],
     styles: [],
   });
 
   loader.register('symposion', {
     html: 'chambers/symposion/fragment.html',
-    scripts: [IMAGES, 'js/generative/SymposionDialogues.js'],
+    scripts: [...IMAGE_SCRIPTS, 'js/generative/SymposionDialogues.js'],
     styles: [],
   });
 
   loader.register('oikos', {
     html: 'chambers/oikos/fragment.html',
-    scripts: [IMAGES, 'js/generative/OikosJournal.js'],
+    scripts: [...IMAGE_SCRIPTS, 'js/generative/OikosJournal.js'],
     styles: [],
   });
 
@@ -72,7 +77,7 @@
   loader.register('odeion', {
     html: 'chambers/odeion/fragment.html',
     scripts: [
-      IMAGES,
+      ...IMAGE_SCRIPTS,
       'odeion/config.js',
       'dependencies/vendor/howler/howler.core.min.js',
       'js/media/MediaURLResolver.js',
@@ -86,7 +91,7 @@
 
   loader.register('theatron', {
     html: 'chambers/theatron/fragment.html',
-    scripts: [IMAGES, 'js/generative/TheatronVisuals.js'],
+    scripts: [...IMAGE_SCRIPTS, 'js/generative/TheatronVisuals.js'],
     styles: [],
   });
 
@@ -94,7 +99,7 @@
   loader.register('ergasterion', {
     html: 'chambers/ergasterion/fragment.html',
     scripts: [
-      IMAGES,
+      ...IMAGE_SCRIPTS,
       'js/ergasterion/ExhibitBridge.js',
       'js/ergasterion/ExhibitPortal.js',
     ],
@@ -103,7 +108,7 @@
 
   loader.register('khronos', {
     html: 'chambers/khronos/fragment.html',
-    scripts: [IMAGES, 'js/generative/KhronosTimeline.js'],
+    scripts: [...IMAGE_SCRIPTS, 'js/generative/KhronosTimeline.js'],
     styles: [],
   });
 
@@ -173,13 +178,13 @@
   // ── Gallery Pages ──────────────────────────────────────────
   loader.register('stills', {
     html: 'chambers/stills/fragment.html',
-    scripts: [CAROUSEL, IMAGES],
+    scripts: [...IMAGE_SCRIPTS],
     styles: [],
   });
 
   loader.register('diary', {
     html: 'chambers/diary/fragment.html',
-    scripts: [CAROUSEL, IMAGES, DIARY],
+    scripts: [...IMAGE_SCRIPTS, DIARY],
     styles: [],
   });
 

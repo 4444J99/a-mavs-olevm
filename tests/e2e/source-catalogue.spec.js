@@ -1,6 +1,93 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
+// Keep real media playback assertions, but retain enough state to distinguish
+// route failures, unavailable codecs, failed requests and rejected playback.
+const playbackDiagnostics = new WeakMap();
+
+test.beforeEach(async ({ page }) => {
+  const diagnostics = { responses: [], failedRequests: [], pageErrors: [] };
+  playbackDiagnostics.set(page, diagnostics);
+  page.on('response', response => {
+    if (/\/ogodtracks\/.*\.mp3(?:\?|$)/i.test(response.url())) {
+      const headers = response.headers();
+      diagnostics.responses.push({
+        url: response.url(),
+        status: response.status(),
+        contentType: headers['content-type'],
+        contentLength: headers['content-length'],
+        contentRange: headers['content-range'],
+        acceptRanges: headers['accept-ranges'],
+      });
+    }
+  });
+  page.on('requestfailed', request => {
+    if (/\/ogodtracks\/.*\.mp3(?:\?|$)/i.test(request.url())) {
+      diagnostics.failedRequests.push({
+        url: request.url(),
+        error: request.failure()?.errorText,
+      });
+    }
+  });
+  page.on('pageerror', error => diagnostics.pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    window.cataloguePlaybackErrors = [];
+  });
+});
+
+async function observePlaybackErrors(page) {
+  await page.evaluate(() => {
+    window.odeionPlayer?.on('error', ({ error, track }) => {
+      window.cataloguePlaybackErrors.push({
+        error: String(error),
+        source: track?.url || track?.src,
+      });
+    });
+  });
+}
+
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status === testInfo.expectedStatus) return;
+  const browserState = await page
+    .evaluate(() => {
+      const player = window.odeionPlayer;
+      const sound = player?.sound;
+      const media = sound?._sounds?.[0]?._node;
+      return {
+        url: window.location.href,
+        playerErrors: window.cataloguePlaybackErrors,
+        playing: player?.isPlaying,
+        position: player?.getPosition(),
+        howlState: sound?.state(),
+        mp3Support: document.createElement('audio').canPlayType('audio/mpeg'),
+        howlerMp3Support:
+          typeof Howler !== 'undefined' ? Howler.codecs('mp3') : null,
+        media: media
+          ? {
+              currentSrc: media.currentSrc,
+              currentTime: media.currentTime,
+              paused: media.paused,
+              readyState: media.readyState,
+              networkState: media.networkState,
+              errorCode: media.error?.code,
+              errorMessage: media.error?.message,
+            }
+          : null,
+      };
+    })
+    .catch(error => ({ diagnosticError: error.message }));
+  const body = JSON.stringify(
+    { ...playbackDiagnostics.get(page), browserState },
+    null,
+    2
+  );
+  console.log('Catalogue playback failure state:\n' + body);
+  await testInfo.attach('catalogue-playback-state', {
+    body,
+    contentType: 'application/json',
+  });
+});
+
 // Exercise shipped markup and scripts in isolation from unrelated SPA navigation.
 // Audio requests are served normally: no mocked Howl, media data, or browser time.
 const fragment = readFileSync(
@@ -32,6 +119,7 @@ test('plays historical audio and stops it when an externally hosted album is sel
     route.fulfill({ contentType: 'text/html', body: fixture })
   );
   await page.goto('/__catalogue-proof__');
+  await observePlaybackErrors(page);
   expect(
     await page.evaluate(() => ({
       propertyAlias: Object.hasOwn(window, 'ETCETER4_CONFIG'),
@@ -87,6 +175,7 @@ test('the real Odeion route plays audio and stops it when changing albums', asyn
 }) => {
   await page.goto('/#odeion');
   await expect(page.locator('#odeion')).toBeVisible();
+  await observePlaybackErrors(page);
   await expect(page.locator('.odeion-album-card')).toHaveCount(4);
   await page.locator('.odeion-album-card').first().press('Enter');
   await expect(page.locator('button.odeion-track-row')).toHaveCount(29);
