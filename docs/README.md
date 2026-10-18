@@ -54,3 +54,7 @@ If you find errors, have suggestions, or want to add content:
 ---
 
 _These materials are designed to be beginner-friendly but comprehensive. If something is unclear or missing, please let us know!_
+
+## Recent Green Progress
+
+- 2026-10-17: Stale Issue Detection workflow succeeded on main (head `4dbbcd77ce410645382f8903558aa3756c4df91d`, run https://github.com/4444J99/generative-multimedia-spatial-environment/actions/runs/39083882520).
