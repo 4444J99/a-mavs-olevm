@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Green CI confirmed on dependabot github_actions update at head 0c543b9 (workflow run 38849137129).
+- Green CI confirmed on dependabot npm_and_yarn updates at head 4dbbcd7 (workflow run 39502384188).
 
 ## [0.1.0] - 2026-02-11
 
