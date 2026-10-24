@@ -606,6 +606,7 @@ global.navigator = {
 };
 
 // Mock fetch
+globalThis.__nativeFetch = globalThis.fetch;
 global.fetch = vi.fn().mockResolvedValue({
   ok: true,
   json: vi.fn().mockResolvedValue({}),

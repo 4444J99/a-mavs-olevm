@@ -2,308 +2,134 @@ name: Project Board Automation
 
 on:
   issues:
-    types: [opened, assigned, unassigned]
-  pull_request:
-    types: [opened, synchronize, closed]
+    types: [assigned, unassigned]
   pull_request_target:
-    types: [closed]
+    types:
+      [
+        opened,
+        reopened,
+        edited,
+        synchronize,
+        ready_for_review,
+        converted_to_draft,
+        closed,
+      ]
 
 permissions:
+  contents: read
   issues: write
   pull-requests: write
-  contents: read
 
 jobs:
-  # Move issues to "In Progress" when assigned
-  move-assigned-issues:
-    name: Update Issue on Assignment
-    runs-on: ubuntu-24.04
-    if: github.event_name == 'issues' && github.event.action == 'assigned'
-
+  update-assignment:
+    name: Update Issue Assignment Labels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
     steps:
-      - name: Move issue to In Progress
+      - name: Update in-progress label
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         with:
           script: |
             const issue = context.payload.issue;
-            const assignee = context.payload.assignee;
-
-            if (!assignee) {
-              console.log('No assignee found');
-              return;
-            }
-
-            console.log(`Moving issue #${issue.number} to In Progress (assigned to @${assignee.login})`);
-
-            // Add "in-progress" label
-            github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue.number,
-              labels: ['in-progress']
-            });
-
-  # Remove "in-progress" label when issue is unassigned
-  remove-progress-on-unassign:
-    name: Update Issue on Unassignment
-    runs-on: ubuntu-24.04
-    if: github.event_name == 'issues' && github.event.action == 'unassigned'
-
-    steps:
-      - name: Remove In Progress label
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
-        with:
-          script: |
-            const issue = context.payload.issue;
-
-            console.log(`Removing In Progress label from issue #${issue.number}`);
-
-            try {
-              github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                name: 'in-progress'
+            if (context.payload.action === 'assigned') {
+              await github.rest.issues.addLabels({
+                ...context.repo, issue_number: issue.number, labels: ['in-progress']
               });
-            } catch (error) {
-              if (error.message.includes('404')) {
-                console.log('Label not found, skipping');
-              } else {
-                throw error;
-              }
-            }
-
-  # Auto-close issues when PR is merged
-  close-issues-on-pr-merge:
-    name: Close Issues on PR Merge
-    runs-on: ubuntu-24.04
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      github.event.action == 'closed'
-
-    steps:
-      - name: Close related issues
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const body = pr.body || '';
-
-            // Look for "Fixes #123", "Closes #456", "Resolves #789"
-            const issueRegex = /(?:Fixes|Closes|Resolves)\s+#(\d+)/gi;
-            let match;
-            const issuesToClose = [];
-
-            while ((match = issueRegex.exec(body)) !== null) {
-              issuesToClose.push(parseInt(match[1], 10));
-            }
-
-            console.log(`PR #${pr.number} merged. Related issues: ${issuesToClose.join(', ') || 'none'}`);
-
-            for (const issueNumber of issuesToClose) {
-              try {
-                // Get the issue to ensure it exists and is open
-                const issue = await github.rest.issues.get({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issueNumber
-                });
-
-                if (issue.data.state === 'open') {
-                  console.log(`Closing issue #${issueNumber}`);
-
-                  // Close the issue
-                  github.rest.issues.update({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: issueNumber,
-                    state: 'closed'
-                  });
-
-                  // Add comment linking to the PR
-                  github.rest.issues.createComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: issueNumber,
-                    body: `Fixed by #${pr.number}. This issue has been automatically closed.`
-                  });
-                }
-              } catch (error) {
-                console.log(`Could not process issue #${issueNumber}: ${error.message}`);
-              }
-            }
-
-  # Label PRs based on file changes
-  label-pr-by-changes:
-    name: Label PR by File Changes
-    runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
-        with:
-          fetch-depth: 0
-
-      - name: Get changed files and add labels
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-
-            // Get the list of changed files
-            const { data: files } = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number
-            });
-
-            const filePaths = files.map(f => f.filename);
-            const labelsToAdd = [];
-
-            console.log(`PR #${pr.number} changed files:`, filePaths);
-
-            // Determine labels based on file changes
-            if (filePaths.some(f => f.match(/^js\/.*\.js$/) || f.match(/^js\//))) {
-              labelsToAdd.push('javascript');
-            }
-            if (filePaths.some(f => f.match(/^css\/.*\.css$/))) {
-              labelsToAdd.push('css');
-            }
-            if (filePaths.some(f => f.match(/^\.github\/workflows\//))) {
-              labelsToAdd.push('ci/cd');
-            }
-            if (filePaths.some(f => f.match(/package.*\.json$/) || f.match(/\.config\//))) {
-              labelsToAdd.push('dependencies');
-            }
-            if (filePaths.some(f => f.match(/^tests?\// || f.match(/\.spec\.js$/) || f.match(/\.test\.js$/)))) {
-              labelsToAdd.push('testing');
-            }
-            if (filePaths.some(f => f.match(/^\.github\//))) {
-              labelsToAdd.push('github');
-            }
-            if (filePaths.some(f => f.match(/\.html$/))) {
-              labelsToAdd.push('html');
-            }
-            if (filePaths.some(f => f.match(/README|CHANGELOG|\.md$/))) {
-              labelsToAdd.push('documentation');
-            }
-            if (filePaths.some(f => f.match(/^(playwright\.config|e2e|tests)/))) {
-              labelsToAdd.push('testing');
-            }
-            if (filePaths.some(f => f.match(/^labyrinth\//) || f.match(/^akademia\//))) {
-              labelsToAdd.push('content');
-            }
-
-            if (labelsToAdd.length > 0) {
-              const uniqueLabels = [...new Set(labelsToAdd)];
-              console.log(`Adding labels: ${uniqueLabels.join(', ')}`);
-
-              github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                labels: uniqueLabels
-              });
-            } else {
-              console.log('No matching labels found');
-            }
-
-  # Mark PR as ready for review when it transitions from draft
-  mark-ready-for-review:
-    name: Mark PR Ready for Review
-    runs-on: ubuntu-24.04
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.action == 'synchronize' &&
-      !github.event.pull_request.draft
-
-    steps:
-      - name: Add ready-for-review label if no draft
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-
-            if (!pr.draft) {
-              console.log(`PR #${pr.number} is ready for review`);
-
-              // Remove draft label if present
+            } else if (issue.assignees.length === 0) {
               try {
                 await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  name: 'draft'
+                  ...context.repo, issue_number: issue.number, name: 'in-progress'
                 });
               } catch (error) {
-                if (error.status !== 404) {
-                  throw error;
-                }
-                console.log('Draft label not present, skipping removal');
-              }
-
-              // Add ready-for-review label
-              try {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  labels: ['ready-for-review']
-                });
-              } catch (error) {
-                if (error.status !== 404) {
-                  throw error;
-                }
-                console.log('ready-for-review label does not exist, skipping');
+                if (error.status !== 404) throw error;
               }
             }
 
-  # Add merged label to closed PRs
-  label-merged-pr:
-    name: Label Merged PR
-    runs-on: ubuntu-24.04
-    if: |
-      (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') &&
-      github.event.pull_request.merged == true &&
-      github.event.action == 'closed'
-
+  verify-issue-linkage:
+    name: Preserve Issue Intentions
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_target' && github.event.action != 'closed'
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - name: Add merged label
+      # Write-token jobs never check out or execute PR-head code.
+      - name: Check out trusted default-branch policy
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Reject merge-triggered issue closure
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         with:
           script: |
-            const pr = context.payload.pull_request;
-
-            console.log(`PR #${pr.number} has been merged`);
-
-            // Remove ready-for-review label
-            try {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                name: 'ready-for-review'
-              });
-            } catch (error) {
-              if (error.status !== 404) {
-                throw error;
-              }
-              console.log('ready-for-review label not present, skipping removal');
+            const { validatePullRequestLinkage } = require('./scripts/stewardship.cjs');
+            const findings = await validatePullRequestLinkage({ github, context });
+            if (findings.length) {
+              core.setFailed(
+                'Native closing directives bypass verification on default. Use Refs #N; ' +
+                'record a closure verdict after the finish line is verified on default. ' +
+                JSON.stringify(findings)
+              );
             }
 
-            // Add merged label
-            try {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                labels: ['merged']
-              });
-            } catch (error) {
-              if (error.status !== 404) {
-                throw error;
+  record-merged-intentions:
+    name: Record Pending Default-Branch Verification
+    runs-on: ubuntu-latest
+    concurrency:
+      group: stewardship-receipt-${{ github.repository }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
+    steps:
+      - name: Check out trusted default-branch policy
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Record successor without changing issue state
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
+        with:
+          script: |
+            const { recordMergedIntentions } = require('./scripts/stewardship.cjs');
+            const recorded = await recordMergedIntentions({ github, context });
+            core.info(`Pending-verification receipts recorded for ${recorded.length} issues.`);
+
+  label-pr:
+    name: Update Pull Request Labels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_target'
+    steps:
+      - name: Check out trusted default-branch policy
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Label metadata and changed paths
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
+        with:
+          script: |
+            const { labelsForPullRequest } = require('./scripts/stewardship.cjs');
+            const pr = context.payload.pull_request;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo, pull_number: pr.number, per_page: 100
+            });
+            const { add: labels, remove: obsolete } = labelsForPullRequest(
+              pr, files.map(file => file.filename)
+            );
+            for (const name of obsolete) {
+              try {
+                await github.rest.issues.removeLabel({
+                  ...context.repo, issue_number: pr.number, name
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
               }
-              console.log('merged label does not exist, skipping');
+            }
+            if (labels.length) {
+              await github.rest.issues.addLabels({
+                ...context.repo, issue_number: pr.number, labels
+              });
             }
