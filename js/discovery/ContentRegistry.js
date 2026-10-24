@@ -341,90 +341,83 @@ class ContentRegistry {
     const chamberId =
       config.chamber?.id || config.chamberId || defaultChamberId;
     const chamberMeta = this.chambers[chamberId] || {};
+    const wing =
+      typeof config.wing === 'string' ? config.wing : config.wing?.id;
+    const context = {
+      chamber: chamberId,
+      chamberName:
+        config.chamberName ||
+        config.chamber?.name ||
+        config.name ||
+        chamberId.toUpperCase(),
+      chamberColor:
+        config.primaryColor ||
+        config.chamber?.color ||
+        config.theme?.primary ||
+        chamberMeta.color,
+      wing: (wing || config.chamber?.wing || chamberMeta.wing)?.toLowerCase(),
+      type: defaultType,
+    };
+    const seen = new Set();
+    const collect = (items, section, sectionTitle, sourceCollection) => {
+      if (!Array.isArray(items)) {
+        return;
+      }
+      items.forEach(item => {
+        // A config may expose the same record through a section and a flat alias.
+        // Preserve distinct objects; avoid adding the identical source twice.
+        if (!item || typeof item !== 'object' || seen.has(item)) {
+          return;
+        }
+        seen.add(item);
+        this.items.push(
+          this._normalizeItem(item, {
+            ...context,
+            section: section || item.section || 'general',
+            sectionTitle,
+            defaultStatus: sourceCollection ? 'unverified' : undefined,
+            provenance: sourceCollection
+              ? {
+                  path: `${defaultChamberId}/config.js`,
+                  collection: sourceCollection,
+                  verification: 'unverified',
+                }
+              : undefined,
+          })
+        );
+      });
+    };
 
-    // Try sections pattern
+    // Configuration sections may contain settings only. Index their explicit
+    // item collections, never entry templates, navigation arrays or storage.
     if (config.sections && typeof config.sections === 'object') {
-      Object.entries(config.sections).forEach(([sectionKey, section]) => {
-        const items = section.items || section.content?.items || [];
-        if (Array.isArray(items)) {
-          items.forEach(item => {
-            this.items.push(
-              this._normalizeItem(item, {
-                chamber: chamberId,
-                chamberName:
-                  config.chamberName ||
-                  config.chamber?.name ||
-                  chamberId.toUpperCase(),
-                chamberColor:
-                  config.primaryColor ||
-                  config.chamber?.color ||
-                  config.theme?.primary ||
-                  chamberMeta.color,
-                section: sectionKey,
-                wing:
-                  config.wing ||
-                  config.chamber?.wing?.toLowerCase() ||
-                  chamberMeta.wing,
-                type: defaultType,
-              })
-            );
-          });
+      Object.entries(config.sections).forEach(([key, section]) => {
+        if (section && typeof section === 'object') {
+          collect(
+            section.items || section.content?.items,
+            key,
+            section.title || section.name
+          );
         }
       });
     }
+    collect(config.items);
+    collect(config.content?.items);
 
-    // Try flat items pattern
-    if (config.items && Array.isArray(config.items)) {
-      config.items.forEach(item => {
-        this.items.push(
-          this._normalizeItem(item, {
-            chamber: chamberId,
-            chamberName:
-              config.chamberName ||
-              config.chamber?.name ||
-              config.name ||
-              chamberId.toUpperCase(),
-            chamberColor:
-              config.primaryColor ||
-              config.chamber?.color ||
-              config.theme?.primary ||
-              chamberMeta.color,
-            section: item.section || 'general',
-            wing:
-              config.wing ||
-              config.chamber?.wing?.toLowerCase() ||
-              chamberMeta.wing,
-            type: defaultType,
-          })
-        );
-      });
-    }
-
-    // Try content.items pattern (Agora-style)
-    if (config.content?.items && Array.isArray(config.content.items)) {
-      config.content.items.forEach(item => {
-        this.items.push(
-          this._normalizeItem(item, {
-            chamber: chamberId,
-            chamberName:
-              config.chamberName ||
-              config.chamber?.name ||
-              chamberId.toUpperCase(),
-            chamberColor:
-              config.primaryColor ||
-              config.chamber?.color ||
-              config.theme?.primary ||
-              chamberMeta.color,
-            section: item.section || 'general',
-            wing:
-              config.wing ||
-              config.chamber?.wing?.toLowerCase() ||
-              chamberMeta.wing,
-            type: defaultType,
-          })
-        );
-      });
-    }
+    // These are the actual shipped public record shapes, not arbitrary arrays.
+    const namedCollections = {
+      symposion: ['interviews', 'conversations'],
+      theatron: ['performances', 'rehearsals'],
+      khronos: ['eras', 'milestones'],
+    };
+    (namedCollections[defaultChamberId] || []).forEach(key => {
+      collect(
+        config[key],
+        key,
+        config.sections?.[key]?.title || config.sections?.[key]?.name,
+        key
+      );
+    });
   }
 
   /**
@@ -436,14 +429,15 @@ class ContentRegistry {
    */
   _normalizeItem(item, context) {
     // Extract date and year
-    const rawDate = item.date || item.year;
+    const rawDate = item.date || item.year || item.startYear;
     let date = null;
     let year = null;
 
     if (rawDate) {
       if (typeof rawDate === 'number') {
         year = rawDate;
-        date = `${rawDate}-01-01`;
+        // A newly indexed source year is not evidence of January 1.
+        date = context.provenance ? null : `${rawDate}-01-01`;
       } else if (typeof rawDate === 'string') {
         date = rawDate;
         year = parseInt(rawDate.substring(0, 4), 10) || null;
@@ -470,7 +464,7 @@ class ContentRegistry {
     return {
       // Core identifiers
       id: item.id,
-      title: item.title || 'Untitled',
+      title: item.title || item.name || 'Untitled',
       subtitle: item.subtitle || item.artist || '',
       description: item.description || item.excerpt || item.content || '',
 
@@ -486,7 +480,8 @@ class ContentRegistry {
       sectionTitle: context.sectionTitle || context.section,
       wing: context.wing,
       type: context.type || this._inferType(context.section, item),
-      status: item.status || 'published',
+      status: item.status || context.defaultStatus || 'published',
+      ...(context.provenance ? { provenance: context.provenance } : {}),
 
       // Searchable content
       tags,

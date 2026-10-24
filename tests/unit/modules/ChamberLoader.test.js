@@ -179,7 +179,7 @@ describe('ChamberLoader', () => {
       document.body.removeChild(section);
     });
 
-    it('should show error UI when fetch fails with empty section', async () => {
+    it('should leave the fragment empty and retryable when fetch fails', async () => {
       const section = document.createElement('section');
       section.id = 'error-chamber';
       document.body.appendChild(section);
@@ -194,10 +194,58 @@ describe('ChamberLoader', () => {
       mockFetch.mockResolvedValue({ ok: false, status: 404 });
 
       await expect(loader.ensureLoaded('error-chamber')).rejects.toThrow('404');
-      expect(section.innerHTML).toContain('Failed to load this chamber');
+      expect(section.innerHTML).toBe('');
       expect(loader.isLoaded('error-chamber')).toBe(false);
 
       document.body.removeChild(section);
+    });
+
+    it('retries a failed fetch without treating error UI as a loaded fragment', async () => {
+      const section = document.createElement('section');
+      section.id = 'retry-chamber';
+      document.body.appendChild(section);
+      const loader = ChamberLoader.getInstance();
+      loader.register('retry-chamber', { html: 'chambers/retry.html' });
+      mockFetch
+        .mockResolvedValueOnce({ ok: false, status: 503 })
+        .mockResolvedValueOnce({
+          ok: true,
+          text: async () => '<p>Recovered work</p>',
+        });
+      await expect(loader.ensureLoaded('retry-chamber')).rejects.toThrow('503');
+      await loader.ensureLoaded('retry-chamber');
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(section.textContent).toBe('Recovered work');
+      expect(loader.isLoaded('retry-chamber')).toBe(true);
+      section.remove();
+    });
+
+    it('does not confuse a fetched fragment with successfully loaded scripts', async () => {
+      const section = document.createElement('section');
+      section.id = 'script-retry';
+      document.body.appendChild(section);
+      const loader = ChamberLoader.getInstance();
+      loader.register('script-retry', {
+        html: 'chambers/retry.html',
+        scripts: ['required.js'],
+      });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => '<p>Preserved fragment</p>',
+      });
+      const scripts = vi
+        .spyOn(ScriptLoader, 'loadSequence')
+        .mockRejectedValueOnce(new Error('Script unavailable'))
+        .mockResolvedValueOnce();
+      await expect(loader.ensureLoaded('script-retry')).rejects.toThrow(
+        'Script unavailable'
+      );
+      expect(loader.isLoaded('script-retry')).toBe(false);
+      expect(section.textContent).toBe('Preserved fragment');
+      await loader.ensureLoaded('script-retry');
+      expect(scripts).toHaveBeenCalledTimes(2);
+      expect(loader.isLoaded('script-retry')).toBe(true);
+      section.remove();
     });
 
     it('should throw for unregistered chamber', async () => {

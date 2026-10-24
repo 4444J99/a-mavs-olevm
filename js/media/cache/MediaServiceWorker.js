@@ -11,7 +11,9 @@
  * Configuration read from ETCETER4_CONFIG.media.cache
  */
 
-const CACHE_VERSION = 'media-cache-v1';
+const MEDIA_CACHE_PREFIX = 'etceter4-media-';
+const MEDIA_CACHE_VERSION = 'v1';
+const CACHE_VERSION = `${MEDIA_CACHE_PREFIX}${MEDIA_CACHE_VERSION}`;
 const AUDIO_CACHE = `${CACHE_VERSION}-audio`;
 const THUMBNAIL_CACHE = `${CACHE_VERSION}-thumbnails`;
 const WAVEFORM_CACHE = `${CACHE_VERSION}-waveforms`;
@@ -29,6 +31,9 @@ const DEFAULT_CONFIG = {
   audioTTL: 604800000, // 7 days
   thumbnailTTL: 86400000, // 24 hours
   maxAudioCacheSize: 104857600, // 100MB
+  maxThumbnailEntries: 100,
+  maxWaveformEntries: 50,
+  maxMetadataEntries: 50,
 };
 
 let cacheConfig = DEFAULT_CONFIG;
@@ -151,8 +156,45 @@ function getMetadataFromResponse(response) {
   try {
     const metadata = response.headers.get('x-cache-metadata');
     return metadata ? JSON.parse(metadata) : null;
-  } catch (error) {
+  } catch (_error) {
     return null;
+  }
+}
+
+/**
+ * Enforce entry count limit for thumbnail, waveform, or metadata caches
+ * Evicts oldest entries first
+ */
+async function enforceEntryLimit(cacheName, maxEntries) {
+  try {
+    const cache = await caches.open(cacheName);
+    const requests = await cache.keys();
+    if (requests.length <= maxEntries) {
+      return;
+    }
+
+    const entries = [];
+    for (const request of requests) {
+      const response = await cache.match(request);
+      if (response) {
+        const metadata = getMetadataFromResponse(response);
+        entries.push({
+          request,
+          timestamp: metadata?.timestamp || 0,
+        });
+      }
+    }
+
+    entries.sort((a, b) => a.timestamp - b.timestamp);
+    const toRemove = entries.slice(0, entries.length - maxEntries);
+    for (const entry of toRemove) {
+      await cache.delete(entry.request);
+    }
+  } catch (error) {
+    console.error(
+      `[MediaSW] Failed to enforce entry limit on ${cacheName}`,
+      error
+    );
   }
 }
 
@@ -179,9 +221,24 @@ async function cacheResponseWithMetadata(
     const cache = await caches.open(cacheName);
     await cache.put(request, modifiedResponse);
 
-    // Check cache size limits for audio
+    // Check bounded cache limits
     if (cacheName === AUDIO_CACHE) {
       await enforceAudioCacheLimit();
+    } else if (cacheName === THUMBNAIL_CACHE) {
+      await enforceEntryLimit(
+        THUMBNAIL_CACHE,
+        cacheConfig.maxThumbnailEntries || 100
+      );
+    } else if (cacheName === WAVEFORM_CACHE) {
+      await enforceEntryLimit(
+        WAVEFORM_CACHE,
+        cacheConfig.maxWaveformEntries || 50
+      );
+    } else if (cacheName === METADATA_CACHE) {
+      await enforceEntryLimit(
+        METADATA_CACHE,
+        cacheConfig.maxMetadataEntries || 50
+      );
     }
   } catch (error) {
     console.error('[MediaSW] Failed to cache response', error);
@@ -235,6 +292,8 @@ async function enforceAudioCacheLimit() {
 
 /**
  * Network-first strategy: try network, fall back to cache
+ * Explicit missing-media states: 404 is returned directly without caching or masking.
+ * Offline failures return retryable 503 rather than fake responses.
  */
 async function networkFirstStrategy(request, cacheName) {
   try {
@@ -251,41 +310,47 @@ async function networkFirstStrategy(request, cacheName) {
       return networkResponse;
     }
 
-    // Network failed, try cache
+    // Explicit 404/not found: do not mask as valid or serve stale fake response
+    if (networkResponse.status === 404) {
+      return networkResponse;
+    }
+
+    // Network server error (5xx): try cache
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       return cachedResponse;
     }
 
-    // No cache, return network response (may be error)
     return networkResponse;
   } catch (error) {
     console.warn('[MediaSW] Network request failed', request.url, error);
 
-    // Network error, fall back to cache
+    // Network error (offline), fall back to cache
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       const metadata = getMetadataFromResponse(cachedResponse);
-
-      // Serve stale cache even if expired (offline mode)
       if (metadata) {
-        console.log('[MediaSW] Serving stale cache:', request.url);
+        console.warn('[MediaSW] Serving stale cache:', request.url);
       }
-
       return cachedResponse;
     }
 
-    // No cache available, return error response
-    return new Response('Network error and no cached version available', {
+    // No cache available: return explicit retryable 503 error, never mask as valid
+    return new Response('Media unavailable offline', {
       status: 503,
       statusText: 'Service Unavailable',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Media-Offline': 'true',
+        'X-Retryable': 'true',
+      },
     });
   }
 }
 
 /**
  * Cache-first strategy: check cache first, fall back to network
+ * Missing assets return explicit 404 or retryable 503.
  */
 async function cacheFirstStrategy(request, cacheName) {
   try {
@@ -293,17 +358,12 @@ async function cacheFirstStrategy(request, cacheName) {
 
     if (cachedResponse) {
       const metadata = getMetadataFromResponse(cachedResponse);
-
-      // Return cached if not expired
       if (!isCacheExpired(cachedResponse, metadata)) {
         return cachedResponse;
       }
-
-      // Cache expired, try fresh version
-      console.log('[MediaSW] Cache expired, fetching fresh:', request.url);
+      console.warn('[MediaSW] Cache expired, fetching fresh:', request.url);
     }
 
-    // No cache or expired, fetch from network
     const networkResponse = await fetch(request);
 
     if (networkResponse.ok) {
@@ -317,9 +377,14 @@ async function cacheFirstStrategy(request, cacheName) {
       return networkResponse;
     }
 
+    // Explicit 404: do not mask
+    if (networkResponse.status === 404) {
+      return networkResponse;
+    }
+
     // Network failed but have stale cache, serve it
     if (cachedResponse) {
-      console.log(
+      console.warn(
         '[MediaSW] Serving stale cache (network failed):',
         request.url
       );
@@ -333,14 +398,18 @@ async function cacheFirstStrategy(request, cacheName) {
     // Network error, try cache
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
-      console.log('[MediaSW] Serving stale cache (offline):', request.url);
+      console.warn('[MediaSW] Serving stale cache (offline):', request.url);
       return cachedResponse;
     }
 
-    return new Response('Network error and no cached version available', {
+    return new Response('Media unavailable offline', {
       status: 503,
       statusText: 'Service Unavailable',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Media-Offline': 'true',
+        'X-Retryable': 'true',
+      },
     });
   }
 }
@@ -348,15 +417,20 @@ async function cacheFirstStrategy(request, cacheName) {
 /**
  * Stream-only strategy: never cache, always stream fresh
  */
+// eslint-disable-next-line no-unused-vars
 async function streamOnlyStrategy(request) {
   try {
     return await fetch(request);
   } catch (error) {
     console.warn('[MediaSW] Stream failed', request.url, error);
-    return new Response('Failed to stream content', {
+    return new Response('Stream unavailable offline', {
       status: 503,
       statusText: 'Service Unavailable',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Media-Offline': 'true',
+        'X-Retryable': 'true',
+      },
     });
   }
 }
@@ -365,15 +439,17 @@ async function streamOnlyStrategy(request) {
  * Install event: pre-cache essential assets
  */
 self.addEventListener('install', event => {
-  console.log('[MediaSW] Installing...');
+  console.warn('[MediaSW] Installing...');
   event.waitUntil(self.skipWaiting());
 });
 
 /**
  * Activate event: clean up old caches
+ * Namespaced: only deletes obsolete media caches (prefixed with etceter4-media- or legacy media-cache-)
+ * Never deletes caches belonging to root sw.js (etceter4-shell- or etceter4-v)
  */
 self.addEventListener('activate', event => {
-  console.log('[MediaSW] Activating...');
+  console.warn('[MediaSW] Activating...');
 
   event.waitUntil(
     caches
@@ -381,8 +457,12 @@ self.addEventListener('activate', event => {
       .then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => {
-            if (!ALL_CACHES.includes(cacheName)) {
-              console.log('[MediaSW] Deleting old cache:', cacheName);
+            if (
+              (cacheName.startsWith(MEDIA_CACHE_PREFIX) ||
+                cacheName.startsWith('media-cache-')) &&
+              !ALL_CACHES.includes(cacheName)
+            ) {
+              console.warn('[MediaSW] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })

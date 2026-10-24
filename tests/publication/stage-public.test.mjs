@@ -17,6 +17,7 @@ import {
 import {
   inspectExhibit,
   isPublicSource,
+  isLfsPointer,
   sha256,
   gitBlobId,
   stagePublic,
@@ -25,6 +26,7 @@ import {
 import { verifyArtifact } from '../../scripts/verify-public-artifact.mjs';
 
 import { assertTrackedInputs } from '../../scripts/check-public-inputs.mjs';
+import { checkPublicationNeeds } from '../../scripts/verify-publication.mjs';
 
 const temporary = [];
 afterEach(async () => {
@@ -361,4 +363,75 @@ test('built HTML requires real nested stylesheets, favicons, and non-module reso
   const files = await inspectExhibit(f.root, 'audio-orb');
   assert.ok(files.some(file => file.path.endsWith('/assets/style.css')));
   assert.ok(files.some(file => file.path.endsWith('/assets/favicon.ico')));
+});
+
+test('unhydrated LFS pointer in exhibit assets fails visibly', async () => {
+  const f = await fixture();
+  const base = 'absorb-alchemize/audio-orb/dist';
+  const lfsPointer =
+    'version https://git-lfs.github.com/spec/v1\noid sha256:4d7a284486b2ae8101474d9c63d43860d9b4152034c38654381f6005ab083b49\nsize 12345\n';
+  await f.put(`${base}/piz_compressed.exr`, lfsPointer);
+  assert.ok(isLfsPointer(Buffer.from(lfsPointer)));
+  await assert.rejects(
+    inspectExhibit(f.root, 'audio-orb'),
+    /Unhydrated LFS pointer in exhibit: absorb-alchemize\/audio-orb\/dist\/piz_compressed\.exr/
+  );
+});
+
+test('unhydrated LFS pointer in public source fails visibly before staging', async () => {
+  const f = await fixture();
+  const lfsPointer =
+    'version https://git-lfs.github.com/spec/v1\noid sha256:1111111111111111111111111111111111111111111111111111111111111111\nsize 54321\n';
+  const name = 'img/photos/diary/diary1.jpg';
+  await f.put(name, Buffer.from(lfsPointer));
+  f.sourceBlobs[name] = gitBlobId(Buffer.from(lfsPointer));
+  await assert.rejects(
+    stagePublic(f),
+    /Unhydrated LFS pointer in public source: img\/photos\/diary\/diary1\.jpg/
+  );
+});
+
+test('unhydrated LFS pointer in exhibit inputs fails input provenance check', async () => {
+  const f = await fixture();
+  const root = 'absorb-alchemize/audio-orb';
+  const lfsPointer =
+    'version https://git-lfs.github.com/spec/v1\noid sha256:2222222222222222222222222222222222222222222222222222222222222222\nsize 999\n';
+  const filename = `${root}/public/texture.png`;
+  await f.put(filename, Buffer.from(lfsPointer));
+  const tracked = new Set([`${root}/package-lock.json`, filename]);
+  await assert.rejects(
+    assertTrackedInputs(f.root, 'audio-orb', tracked),
+    /Unhydrated LFS pointer in exhibit input: absorb-alchemize\/audio-orb\/public\/texture\.png/
+  );
+});
+
+test('publication needs check reports blocked status and explicit per-exhibit requirements visibly', async () => {
+  const f = await fixture();
+  const needs = {
+    schemaVersion: 1,
+    issue: 'https://github.com/organvm-ii-poiesis/a-mavs-olevm/issues/94',
+    successor: 'https://github.com/organvm-ii-poiesis/a-mavs-olevm/issues/144',
+    status: 'blocked',
+    exhibits: {
+      'audio-orb':
+        'Needs a server-issued short-lived session credential and a no-credential entry state',
+      'gemini-ink-studio':
+        'Needs an approved server credential boundary for voice control',
+      'p5js-playground': 'Needs a server generation endpoint with abuse controls',
+      'synthwave-space':
+        'Needs a server generation endpoint with abuse controls and a verified no-credential entry state',
+    },
+  };
+  const needsFile = path.join(f.root, 'publication-needs.json');
+  await writeFile(needsFile, JSON.stringify(needs, null, 2));
+
+  const result = await checkPublicationNeeds(new URL(`file://${needsFile}`));
+  assert.equal(result.ok, false);
+  assert.equal(result.status, 'blocked');
+  assert.equal(result.missing.length, 4);
+  assert.match(result.message, /audio-orb: Needs a server-issued/);
+  assert.match(result.message, /gemini-ink-studio: Needs an approved/);
+  assert.match(result.message, /p5js-playground: Needs a server generation/);
+  assert.match(result.message, /synthwave-space: Needs a server generation/);
+  assert.match(result.message, /https:\/\/github\.com\/organvm-ii-poiesis\/a-mavs-olevm\/issues\/94/);
 });

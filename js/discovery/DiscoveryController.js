@@ -130,6 +130,7 @@ class DiscoveryController {
       console.info('DiscoveryController: Initialized');
     } catch (error) {
       console.error('DiscoveryController: Initialization failed:', error);
+      throw error;
     }
 
     return this;

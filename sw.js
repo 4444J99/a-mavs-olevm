@@ -6,8 +6,10 @@
  * Bump CACHE_VERSION when deploying updated assets to bust stale caches
  */
 
-const CACHE_VERSION = 5;
-const CACHE_NAME = `etceter4-v${CACHE_VERSION}`;
+const SW_CACHE_PREFIX = 'etceter4-shell-';
+const CACHE_VERSION = 6;
+const CACHE_NAME = `${SW_CACHE_PREFIX}v${CACHE_VERSION}`;
+const MAX_DYNAMIC_ENTRIES = 50;
 
 /**
  * Critical assets to cache
@@ -23,6 +25,7 @@ const CRITICAL_ASSETS = [
   _swBase + '/offline.html',
   _swBase + '/css/styles.css',
   _swBase + '/css/vendor/tachyons/css/tachyons.min.css',
+  _swBase + '/js/runtimeFallback.js',
   _swBase + '/js/data/source-catalogue.js',
   _swBase + '/js/config.js',
   _swBase + '/js/modules/ScriptLoader.js',
@@ -36,6 +39,28 @@ const CRITICAL_ASSETS = [
   _swBase + '/img/favicon.ico',
   _swBase + '/img/placeholder.jpg',
 ];
+
+/**
+ * Limit non-critical dynamic cache entries to prevent unbounded storage growth
+ */
+async function limitCacheEntries(cacheName, maxEntries) {
+  try {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+    if (keys.length > maxEntries) {
+      const criticalSet = new Set(CRITICAL_ASSETS);
+      for (const key of keys) {
+        if (keys.length <= maxEntries) break;
+        const pathname = new URL(key.url).pathname;
+        if (!criticalSet.has(pathname)) {
+          await cache.delete(key);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Cache limit enforcement warning:', error);
+  }
+}
 
 /**
  * Install event - cache critical assets
@@ -60,7 +85,9 @@ self.addEventListener('install', event => {
 });
 
 /**
- * Activate event - clean up old caches
+ * Activate event - clean up old shell caches
+ * Namespaced: only deletes obsolete shell caches (prefixed with etceter4-shell- or legacy etceter4-v)
+ * Never deletes caches belonging to MediaServiceWorker (etceter4-media- or media-cache-)
  */
 self.addEventListener('activate', event => {
   event.waitUntil(
@@ -69,7 +96,12 @@ self.addEventListener('activate', event => {
       .then(cacheNames => {
         return Promise.all(
           cacheNames
-            .filter(cacheName => cacheName !== CACHE_NAME)
+            .filter(
+              cacheName =>
+                (cacheName.startsWith(SW_CACHE_PREFIX) ||
+                  /^etceter4-v\d+$/.test(cacheName)) &&
+                cacheName !== CACHE_NAME
+            )
             .map(cacheName => caches.delete(cacheName))
         ).catch(err => {
           console.warn('Cache cleanup failed:', err);
@@ -86,7 +118,7 @@ self.addEventListener('activate', event => {
 });
 
 /**
- * Fetch event - network first, fallback to cache, then offline page
+ * Fetch event - network first, fallback to cache, then explicit offline response
  * Does not cache large images to respect cache limits
  */
 self.addEventListener('fetch', event => {
@@ -112,13 +144,26 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          const clone = response.clone();
-          caches
-            .open(CACHE_NAME)
-            .then(cache => cache.put(event.request, clone));
+          if (response.ok) {
+            const clone = response.clone();
+            caches
+              .open(CACHE_NAME)
+              .then(cache => cache.put(event.request, clone));
+          }
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          return new Response('Chamber fragment unavailable offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: {
+              'Content-Type': 'text/plain',
+              'X-Offline-Retryable': 'true',
+            },
+          });
+        })
     );
     return;
   }
@@ -126,26 +171,35 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Clone the response before caching
-        const responseClone = response.clone();
-
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone);
-        });
-
+        if (response.ok && event.request.method === 'GET') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(async cache => {
+            await cache.put(event.request, responseClone);
+            await limitCacheEntries(CACHE_NAME, MAX_DYNAMIC_ENTRIES);
+          });
+        }
         return response;
       })
-      .catch(() => {
-        // Fallback to cache if network fails
-        return caches.match(event.request).then(cachedResponse => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // For navigation requests, serve the offline page
-          if (event.request.mode === 'navigate') {
-            return caches.match(_swBase + '/offline.html');
-          }
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
           return cachedResponse;
+        }
+        // For navigation requests, serve the offline page
+        if (event.request.mode === 'navigate') {
+          const offlinePage = await caches.match(_swBase + '/offline.html');
+          if (offlinePage) {
+            return offlinePage;
+          }
+        }
+        // Explicit 503 instead of masking missing assets as valid responses
+        return new Response('Asset unavailable offline', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: {
+            'Content-Type': 'text/plain',
+            'X-Offline-Retryable': 'true',
+          },
         });
       })
   );

@@ -25,6 +25,10 @@ export const gitBlobId = bytes =>
     .update(`blob ${bytes.length}\0`)
     .update(bytes)
     .digest('hex');
+export const isLfsPointer = bytes =>
+  (Buffer.isBuffer(bytes) || typeof bytes === 'string') &&
+  bytes.length < 1024 &&
+  bytes.toString().startsWith('version https://git-lfs.github.com/spec/v1');
 const hidden = name =>
   name.startsWith('.') ||
   ['node_modules', 'test', 'tests', '__tests__'].includes(name);
@@ -128,6 +132,9 @@ export async function inspectExhibit(root, name) {
       throw new Error(`Source or unsupported file in exhibit: ${relative}`);
     }
     const bytes = await readFile(full);
+    if (isLfsPointer(bytes)) {
+      throw new Error(`Unhydrated LFS pointer in exhibit: ${relative}`);
+    }
     if (
       ['.html', '.js', '.json'].includes(path.extname(relative)) &&
       /AIza[0-9A-Za-z_-]{35}/.test(bytes.toString())
@@ -194,6 +201,9 @@ export async function stagePublic({
   for (const name of sourceFiles.filter(isPublicSource).sort()) {
     const full = await checkedFile(root, name);
     const bytes = await readFile(full);
+    if (isLfsPointer(bytes)) {
+      throw new Error(`Unhydrated LFS pointer in public source: ${name}`);
+    }
     // Compare raw committed bytes. Git's text filters can report an untouched
     // historical CRLF SVG as dirty; normalization must not rewrite artwork.
     if (!sourceBlobs || gitBlobId(bytes) !== sourceBlobs[name]) {

@@ -78,6 +78,14 @@ describe('ScriptLoader', () => {
 
       await expect(promise).rejects.toThrow('failed to load fail.js');
       expect(ScriptLoader._promises.has('fail.js')).toBe(false);
+      expect(document.querySelector('script[src*="fail.js"]')).toBeNull();
+      const retry = ScriptLoader.load('fail.js');
+      const replacement = document.querySelector('script[src*="fail.js"]');
+      expect(replacement).not.toBe(script);
+      expect(ScriptLoader.isLoaded('fail.js')).toBe(false);
+      replacement.onload();
+      await retry;
+      expect(ScriptLoader.isLoaded('fail.js')).toBe(true);
     });
 
     it('should set crossOrigin and integrity attributes', () => {

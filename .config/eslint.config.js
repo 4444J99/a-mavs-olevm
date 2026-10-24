@@ -6,6 +6,7 @@ export default [
     files: [
       'js/config.js',
       'js/main.js',
+      'js/runtimeFallback.js',
       'js/page.js',
       'js/pageData.js',
       'js/images.js',

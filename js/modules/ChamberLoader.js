@@ -176,31 +176,10 @@ class ChamberLoader {
 
       this._loaded.add(chamberId);
     } catch (err) {
-      // If fetch fails but the section already has inline HTML, proceed gracefully
-      if (el && el.innerHTML.trim().length > 0) {
-        console.warn(
-          `ChamberLoader: failed to load fragment for "${chamberId}", using existing inline content.`,
-          err.message
-        );
-        this._loaded.add(chamberId);
-      } else {
-        // Show error message in the section
-        if (el) {
-          el.innerHTML = `
-            <div class="flex items-center justify-center vh-100 white tc">
-              <div>
-                <p class="f4 mb3">Failed to load this chamber.</p>
-                <p class="f6 o-70">${err.message}</p>
-                <button onclick="location.reload()" class="mt3 pa2 ph3 ba b--white bg-transparent white pointer br2">
-                  Reload Page
-                </button>
-              </div>
-            </div>`;
-        }
-        // Clean up so it can be retried
-        this._loadPromises.delete(chamberId);
-        throw err;
-      }
+      // A fetched fragment does not prove its scripts loaded. Never count an
+      // error message or partially loaded chamber as successful inline content.
+      this._loadPromises.delete(chamberId);
+      throw err;
     }
   }
 

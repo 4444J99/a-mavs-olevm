@@ -60,6 +60,8 @@ class ScriptLoader {
       };
 
       script.onerror = () => {
+        // A failed tag remaining in the DOM must not make a retry look loaded.
+        script.remove();
         // Remove failed script from tracking so it can be retried
         ScriptLoader._promises.delete(src);
         reject(new Error(`ScriptLoader: failed to load ${src}`));
