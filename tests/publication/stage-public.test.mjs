@@ -384,7 +384,6 @@ test('unhydrated LFS pointer in public source fails visibly before staging', asy
     'version https://git-lfs.github.com/spec/v1\noid sha256:1111111111111111111111111111111111111111111111111111111111111111\nsize 54321\n';
   const name = 'img/photos/diary/diary1.jpg';
   await f.put(name, Buffer.from(lfsPointer));
-  f.sourceBlobs[name] = gitBlobId(Buffer.from(lfsPointer));
   await assert.rejects(
     stagePublic(f),
     /Unhydrated LFS pointer in public source: img\/photos\/diary\/diary1\.jpg/

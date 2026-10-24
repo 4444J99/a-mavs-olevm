@@ -201,12 +201,12 @@ export async function stagePublic({
   for (const name of sourceFiles.filter(isPublicSource).sort()) {
     const full = await checkedFile(root, name);
     const bytes = await readFile(full);
-    if (isLfsPointer(bytes)) {
-      throw new Error(`Unhydrated LFS pointer in public source: ${name}`);
-    }
     // Compare raw committed bytes. Git's text filters can report an untouched
     // historical CRLF SVG as dirty; normalization must not rewrite artwork.
     if (!sourceBlobs || gitBlobId(bytes) !== sourceBlobs[name]) {
+      if (isLfsPointer(bytes)) {
+        throw new Error(`Unhydrated LFS pointer in public source: ${name}`);
+      }
       throw new Error(`Public source differs from the committed blob: ${name}`);
     }
     planned.push({ path: name, bytes: bytes.length, sha256: sha256(bytes) });
