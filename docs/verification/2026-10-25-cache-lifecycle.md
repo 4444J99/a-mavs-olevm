@@ -63,3 +63,25 @@ installed default is open: local / browser: default; Playwright previously used
 the manual dev command without overriding it. Automated test startup now passes
 --no-open. The manual development command is preserved. One scoped headless
 probe passed with the new configuration, and its port3000 server exited.
+
+## Follow-up review: pending response memory
+
+Accepted PRRT_kwDONx_cBs6wFA4h: serialized writes previously retained unread
+response clones while earlier writes drained. Admission now precedes cloning,
+with default limits of four pending non-audio writes and 16 MiB retained payload
+across stores. Copies are consumed immediately with an aggregate byte check
+before entering the serialized maintenance queue. Declared oversize bodies are
+rejected before cloning; unknown oversized bodies cancel only the cache reader
+without awaiting foreground consumption. Every completion/error releases its
+count and payload reservation. Bounded concatenation and Response construction
+can temporarily copy the payload; the 16 MiB value bounds retained source bytes,
+not total browser heap. Network delivery remains independent of cache completion.
+
+Four new regressions cover blocked writers, oversize admission, recovery of
+capacity and reversed completion of same-URL bodies. Queue positions are reserved
+before copying completes, preserving response arrival order; copies drain eagerly
+within the count/byte limits. All 58 worker cases pass. The ordering regression
+also rejects an in-memory mutant that queues after body completion. Independent
+review found no remaining blocking findings. All 12 native offline/streaming/
+management cases pass across Chromium, Firefox and Mobile Chrome in 19.3 seconds
+after the ordering correction. No source or original carrier is retired.

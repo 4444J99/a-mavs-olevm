@@ -117,6 +117,8 @@ const MEDIA_DEFAULTS = {
   maxThumbnailEntries: 100,
   maxWaveformEntries: 50,
   maxMetadataEntries: 50,
+  maxPendingMediaWrites: 4,
+  maxPendingMediaBytes: 16777216,
 };
 const mediaConfig = { ...MEDIA_DEFAULTS };
 const ENTRY_LIMIT_KEYS = [
@@ -125,6 +127,75 @@ const ENTRY_LIMIT_KEYS = [
   'maxMetadataEntries',
 ];
 const mediaMaintenance = new Map();
+let pendingMediaWrites = 0;
+let pendingMediaBytes = 0;
+
+function boundedMediaWrite(cache, store, request, network) {
+  const available = mediaConfig.maxPendingMediaBytes - pendingMediaBytes;
+  const declared = Number(network.headers.get('Content-Length'));
+  if (
+    pendingMediaWrites >= mediaConfig.maxPendingMediaWrites ||
+    available <= 0 ||
+    (Number.isFinite(declared) && declared > available)
+  )
+    return Promise.resolve();
+  // Admit before cloning and consume immediately, never queue an unread tee.
+  pendingMediaWrites++;
+  let retained = 0;
+  const ready = (async () => {
+    const copy = network.clone();
+    const reader = copy.body?.getReader();
+    const chunks = [];
+    if (reader) {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (
+            value.byteLength >
+            mediaConfig.maxPendingMediaBytes - pendingMediaBytes
+          ) {
+            // Tee cancellation may wait for the foreground reader; never await it.
+            void reader.cancel().catch(() => {});
+            return;
+          }
+          pendingMediaBytes += value.byteLength;
+          retained += value.byteLength;
+          chunks.push(value);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+    const bytes = new Uint8Array(retained);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    chunks.length = 0;
+    return new Response(bytes, {
+      status: copy.status,
+      statusText: copy.statusText,
+      headers: copy.headers,
+    });
+  })().catch(error => {
+    console.warn('[MediaSW] Pending response copy failed:', error);
+    return null;
+  });
+  // Reserve write order now while the bounded copy drains in parallel.
+  return queueMediaMaintenance(store, async () => {
+    const buffered = await ready;
+    if (buffered) await storeMedia(cache, store, request, buffered);
+  })
+    .catch(error => {
+      console.warn('[MediaSW] Pending cache write failed:', error);
+    })
+    .finally(() => {
+      pendingMediaWrites--;
+      pendingMediaBytes -= retained;
+    });
+}
 
 function queueMediaMaintenance(store, task) {
   const previous = mediaMaintenance.get(store) || Promise.resolve();
@@ -320,13 +391,10 @@ async function mediaResponse(request, store, event) {
         network.status === 200 &&
         network.type !== 'opaque'
       ) {
-        // Capture before queueing: foreground readers may consume the original.
-        const copy = network.clone();
-        const write = () => storeMedia(cache, store, request, copy);
         event.waitUntil(
           store === MEDIA_CACHES[0]
-            ? write()
-            : queueMediaMaintenance(store, write)
+            ? storeMedia(cache, store, request, network.clone())
+            : boundedMediaWrite(cache, store, request, network)
         );
       }
       return network;
@@ -450,7 +518,8 @@ self.addEventListener('message', event => {
       if (
         Number.isFinite(value) &&
         value >= 0 &&
-        (entryIndex < 0 || Number.isSafeInteger(value))
+        ((entryIndex < 0 && key !== 'maxPendingMediaWrites') ||
+          Number.isSafeInteger(value))
       ) {
         mediaConfig[key] = value;
         if (entryIndex >= 0)

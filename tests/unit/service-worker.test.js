@@ -109,6 +109,166 @@ const request = (path, options) => new Request(new URL(path, origin), options);
 const offline = w => w.fetch.mockRejectedValue(new TypeError('offline'));
 
 describe('root service worker', () => {
+  it('preserves same-URL write order when the newer response body finishes first', async () => {
+    const w = worker();
+    const path = '/media/metadata/reordered.json';
+    let closeOlder;
+    const older = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('older'));
+          closeOlder = () => controller.close();
+        },
+      })
+    );
+    const newer = new Response('newer');
+    let drained;
+    const newerDrained = new Promise(resolve => {
+      drained = resolve;
+    });
+    const clone = newer.clone.bind(newer);
+    vi.spyOn(newer, 'clone').mockImplementation(() => {
+      const copy = clone();
+      const getReader = copy.body.getReader.bind(copy.body);
+      vi.spyOn(copy.body, 'getReader').mockImplementation(() => {
+        const reader = getReader();
+        const read = reader.read.bind(reader);
+        vi.spyOn(reader, 'read').mockImplementation(async () => {
+          const chunk = await read();
+          if (chunk.done) drained();
+          return chunk;
+        });
+        return reader;
+      });
+      return copy;
+    });
+    w.fetch.mockResolvedValueOnce(older).mockResolvedValueOnce(newer);
+    const first = w.dispatch('fetch', { request: request(path) });
+    const firstBody = (await first.response).text();
+    const second = w.dispatch('fetch', { request: request(path) });
+    try {
+      expect(await (await second.response).text()).toBe('newer');
+      await newerDrained;
+    } finally {
+      closeOlder();
+    }
+    expect(await firstBody).toBe('older');
+    await Promise.all([first.finish(), second.finish()]);
+    expect(
+      await (await (await w.caches.open(media[3])).match(path)).text()
+    ).toBe('newer');
+  });
+
+  it('bounds pending writes before cloning while foreground responses remain usable', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxPendingMediaWrites: 1 } },
+      },
+    });
+    let entered;
+    let release;
+    const blocked = new Promise(resolve => {
+      release = resolve;
+    });
+    const writing = new Promise(resolve => {
+      entered = resolve;
+    });
+    const open = w.caches.open;
+    w.caches.open = async name => {
+      const cache = await open(name);
+      return {
+        ...cache,
+        put: async (request, response) => {
+          entered();
+          await blocked;
+          return cache.put(request, response);
+        },
+      };
+    };
+    const responses = [];
+    w.fetch.mockImplementation(async () => {
+      const response = new Response('network');
+      vi.spyOn(response, 'clone');
+      responses.push(response);
+      return response;
+    });
+    const first = w.dispatch('fetch', {
+      request: request('/media/metadata/first.json'),
+    });
+    await writing;
+    const second = w.dispatch('fetch', {
+      request: request('/media/metadata/second.json'),
+    });
+    try {
+      expect(await (await second.response).text()).toBe('network');
+      expect(responses[1].clone).not.toHaveBeenCalled();
+    } finally {
+      release();
+      await first.response;
+      await first.finish();
+      await second.finish();
+    }
+    expect(
+      await (await open(media[3])).match('/media/metadata/second.json')
+    ).toBeUndefined();
+  });
+
+  it('bounds unknown response bytes and releases the capacity after an oversized copy', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxPendingMediaBytes: 4 } },
+      },
+    });
+    w.fetch.mockResolvedValueOnce(new Response('12345'));
+    expect(
+      await (
+        await w.emit('fetch', {
+          request: request('/media/metadata/large.json'),
+        })
+      ).text()
+    ).toBe('12345');
+    const cache = await w.caches.open(media[3]);
+    expect(await cache.match('/media/metadata/large.json')).toBeUndefined();
+    w.fetch.mockResolvedValueOnce(new Response('ok'));
+    expect(
+      await (
+        await w.emit('fetch', {
+          request: request('/media/metadata/small.json'),
+        })
+      ).text()
+    ).toBe('ok');
+    expect(await (await cache.match('/media/metadata/small.json')).text()).toBe(
+      'ok'
+    );
+  });
+
+  it('rejects an oversized declared body before cloning it', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxPendingMediaBytes: 4 } },
+      },
+    });
+    const response = new Response('12345', {
+      headers: { 'Content-Length': '5' },
+    });
+    const clone = vi.spyOn(response, 'clone');
+    w.fetch.mockResolvedValueOnce(response);
+    expect(
+      await (
+        await w.emit('fetch', {
+          request: request('/media/metadata/large.json'),
+        })
+      ).text()
+    ).toBe('12345');
+    expect(clone).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['/js/living-pantheon/data/fragments.json', 3],
     ['/img/interface.png', 1],
