@@ -207,7 +207,9 @@ test.describe('offline catalogue', () => {
     );
     const cached = await page.evaluate(async () => {
       const keys = await caches.keys();
-      const cacheName = keys.find(key => key.startsWith('etceter4-v'));
+      const cacheName = keys.find(
+        key => key.startsWith('etceter4-shell-v') || key.startsWith('etceter4-v')
+      );
       const cache = await caches.open(cacheName);
       return {
         cacheName,

@@ -15,7 +15,11 @@ export default defineConfig({
   test: {
     // Test directory (relative to project root)
     dir: projectRoot,
-    include: ['tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts}'],
+    include: [
+      'tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts}',
+      'tests/toolchain/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts}',
+      'tests/governance/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts}',
+    ],
 
     // Environment for DOM testing
     environment: 'jsdom',

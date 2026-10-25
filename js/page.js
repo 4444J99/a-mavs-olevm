@@ -21,6 +21,7 @@ const TransitionState = {
 };
 
 let transitionState = TransitionState.IDLE;
+let pendingPageId = null;
 
 /**
  * Page Class
@@ -62,27 +63,32 @@ class Page {
    * Initializes the page. Loads chamber fragment via ChamberLoader if registered.
    * @returns {Promise<void>}
    */
-  async initPage() {
-    if (!this.isInitialized && !this.isInitializing) {
-      this.isInitializing = true;
+  initPage() {
+    if (this.isInitialized) {
+      return Promise.resolve();
+    }
+    if (this._initializationPromise) {
+      return this._initializationPromise;
+    }
 
-      // Load fragment if registered with ChamberLoader
-      if (typeof ChamberLoader !== 'undefined') {
-        try {
+    this.isInitializing = true;
+    this._initializationPromise = Promise.resolve()
+      .then(async () => {
+        if (typeof ChamberLoader !== 'undefined') {
           const loader = ChamberLoader.getInstance();
           const id = this.id.replace('#', '');
           if (loader.isRegistered(id) && !loader.isLoaded(id)) {
             await loader.ensureLoaded(id);
           }
-        } catch (loaderError) {
-          console.warn('ChamberLoader error:', loaderError.message);
         }
-      }
-
-      this.initialize();
-      this.isInitializing = false;
-      this.isInitialized = true;
-    }
+        await this.initialize();
+        this.isInitialized = true;
+      })
+      .finally(() => {
+        this.isInitializing = false;
+        this._initializationPromise = null;
+      });
+    return this._initializationPromise;
   }
 
   /**
@@ -123,6 +129,67 @@ class Page {
   }
 }
 
+/** Animate with the installed Velocity core API; navigation survives its absence. */
+function animatePageOpacity(element, opacity, options) {
+  const reducedMotion = window.matchMedia?.(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+  if (typeof element.velocity === 'function' && !reducedMotion) {
+    element.velocity({ opacity }, options);
+  } else {
+    options.begin?.();
+    element.css('opacity', opacity);
+    options.complete?.();
+  }
+}
+
+/** Restore a truthful visible route after a failed lazy load, retaining retry. */
+function recoverNavigation(error, previousPage, targetId) {
+  console.error('Navigation failed:', error);
+  const queuedPageId = pendingPageId;
+  pendingPageId = null;
+  transitionState = TransitionState.IDLE;
+  currentPage = previousPage?.id ? previousPage : Page.findPage('#landing');
+  currentPage.isLoading = false;
+  $(currentPage.id)
+    .removeClass('dn')
+    .css({
+      display:
+        currentPage.id === '#stills' || currentPage.id === '#diary'
+          ? 'table'
+          : 'block',
+      opacity: 1,
+    });
+  // Click navigation has not entered history yet. Only repair a failed browser
+  // history entry; preserve a newer history request that is about to be drained.
+  if (
+    window.location.hash !== currentPage.id &&
+    window.location.hash !== queuedPageId
+  ) {
+    window.history.replaceState(null, '', currentPage.id);
+  }
+  if (typeof isNavigating !== 'undefined') {
+    isNavigating = false;
+  }
+  document.getElementById('navigation-error')?.remove();
+  const message = document.createElement('aside');
+  message.id = 'navigation-error';
+  message.className = 'fixed top-0 left-0 right-0 pa3 bg-white black z-999';
+  message.setAttribute('role', 'alert');
+  const text = document.createElement('span');
+  text.textContent =
+    'This section could not load. Your current page is still available. ';
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.textContent = 'Retry section';
+  retry.addEventListener('click', () => showNewSection(targetId));
+  message.append(text, retry);
+  document.body.appendChild(message);
+  if (queuedPageId && queuedPageId !== currentPage.id) {
+    showNewSection(queuedPageId);
+  }
+}
+
 /**
  * showNewSection
  *
@@ -136,17 +203,23 @@ class Page {
  */
 
 function showNewSection(_loadingSection) {
-  // Prevent navigation if already transitioning or invalid input
-  if (
-    !_loadingSection ||
-    currentPage.isLoading ||
-    transitionState === TransitionState.TRANSITIONING
-  ) {
+  if (!_loadingSection) {
+    return false;
+  }
+  // A visible incoming page can already receive clicks. Retain the latest
+  // requested route until the current transition finishes instead of dropping it.
+  if (currentPage?.isLoading || transitionState !== TransitionState.IDLE) {
+    pendingPageId = _loadingSection;
+    return false;
+  }
+  if (currentPage?.id === _loadingSection) {
     return false;
   }
 
   try {
     const loadingSection = Page.findPage(_loadingSection);
+    const previousPage = currentPage;
+    document.getElementById('navigation-error')?.remove();
 
     // Set state to transitioning
     transitionState = TransitionState.TRANSITIONING;
@@ -172,62 +245,77 @@ function showNewSection(_loadingSection) {
       UISounds.pageExit(0.5);
     }
 
-    // Update URL hash for browser history (set flag to prevent double navigation)
-    if (typeof isNavigating !== 'undefined') {
-      isNavigating = true;
-    }
-    window.location.hash = _loadingSection;
-    if (typeof isNavigating !== 'undefined') {
-      setTimeout(() => {
-        isNavigating = false;
-      }, ETCETER4_CONFIG.animations.navigationDebounce);
-    }
+    loadingSection
+      .initPage()
+      .then(() => {
+        // Do not add a failed destination or a superseded slow load to history.
+        const queuedPageId = pendingPageId;
+        pendingPageId = null;
+        if (queuedPageId && queuedPageId !== _loadingSection) {
+          transitionState = TransitionState.IDLE;
+          showNewSection(queuedPageId);
+          return;
+        }
+        // pushState does not emit hashchange; genuine back/forward events have
+        // already changed the URL and therefore do not create another entry.
+        if (window.location.hash !== _loadingSection) {
+          window.history.pushState(null, '', _loadingSection);
+        }
+        fadeOutPage(currentPage, () => {
+          fadeInPage(loadingSection, () => {
+            // Transition Living Pantheon to new chamber after page is visible
+            try {
+              if (typeof LivingPantheonCore !== 'undefined') {
+                const livingPantheon = LivingPantheonCore.getInstance();
+                if (livingPantheon && livingPantheon.isRunning) {
+                  // Extract chamber ID from page ID (remove '#' prefix)
+                  const chamberId = _loadingSection.replace('#', '');
+                  // Get chamber color from config if available
+                  const chamberConfig =
+                    typeof ETCETER4_CONFIG !== 'undefined'
+                      ? ETCETER4_CONFIG.livingPantheon?.chambers?.[chamberId]
+                      : null;
+                  const chamberColor = chamberConfig?.color || null;
 
-    loadingSection.initPage().then(() => {
-      fadeOutPage(currentPage, () => {
-        fadeInPage(loadingSection, () => {
-          // Transition Living Pantheon to new chamber after page is visible
-          try {
-            if (typeof LivingPantheonCore !== 'undefined') {
-              const livingPantheon = LivingPantheonCore.getInstance();
-              if (livingPantheon && livingPantheon.isRunning) {
-                // Extract chamber ID from page ID (remove '#' prefix)
-                const chamberId = _loadingSection.replace('#', '');
-                // Get chamber color from config if available
-                const chamberConfig =
-                  typeof ETCETER4_CONFIG !== 'undefined'
-                    ? ETCETER4_CONFIG.livingPantheon?.chambers?.[chamberId]
-                    : null;
-                const chamberColor = chamberConfig?.color || null;
-
-                livingPantheon.transitionToNewChamber(chamberId, chamberColor);
+                  livingPantheon.transitionToNewChamber(
+                    chamberId,
+                    chamberColor
+                  );
+                }
               }
+            } catch (pantheError) {
+              console.warn(
+                'Living Pantheon transition warning:',
+                pantheError.message
+              );
             }
-          } catch (pantheError) {
-            console.warn(
-              'Living Pantheon transition warning:',
-              pantheError.message
-            );
-          }
 
-          // Play page enter sound
-          if (typeof UISounds !== 'undefined' && UISounds.isEnabled()) {
-            UISounds.pageEnter(0.5);
-          }
+            // Play page enter sound
+            if (typeof UISounds !== 'undefined' && UISounds.isEnabled()) {
+              UISounds.pageEnter(0.5);
+            }
 
-          // Manage 3D compositor lifecycle after navigation
-          if (typeof manageLandingCompositor === 'function') {
-            setTimeout(manageLandingCompositor, 100);
-          }
+            // Manage 3D compositor lifecycle after navigation
+            if (typeof manageLandingCompositor === 'function') {
+              setTimeout(manageLandingCompositor, 100);
+            }
 
-          // Set state to ready when transition completes
-          transitionState = TransitionState.READY;
-          setTimeout(() => {
-            transitionState = TransitionState.IDLE;
-          }, ETCETER4_CONFIG.animations.transitionCooldown);
+            // Set state to ready when transition completes
+            transitionState = TransitionState.READY;
+            setTimeout(() => {
+              transitionState = TransitionState.IDLE;
+              const queuedPageId = pendingPageId;
+              pendingPageId = null;
+              if (queuedPageId && queuedPageId !== currentPage.id) {
+                showNewSection(queuedPageId);
+              }
+            }, ETCETER4_CONFIG.animations.transitionCooldown);
+          });
         });
+      })
+      .catch(error => {
+        recoverNavigation(error, previousPage, _loadingSection);
       });
-    });
 
     return true;
   } catch (error) {
@@ -255,18 +343,24 @@ function fadeInPage(_Page, _cb) {
         _display = 'table';
       }
 
-      // fade in next section
-      $(_Page.id).velocity('fadeIn', {
+      // Velocity 2 core accepts opacity maps, not the removed fadeIn redirect.
+      $(_Page.id)
+        .removeClass('dn')
+        .css('display', _display || 'block');
+      animatePageOpacity($(_Page.id), 1, {
         delay: 0,
         duration: ETCETER4_CONFIG.animations.fadeInDuration,
         display: _display,
         easing: 'easeInSine',
         begin() {
+          currentPage = _Page;
+          window.currentPage = _Page;
           _Page.isLoading = true;
         },
         complete() {
           try {
             _Page.isLoading = false;
+            currentPage = _Page;
             window.currentPage = _Page;
 
             // Record visit in journey tracker
@@ -377,7 +471,7 @@ function fadeOutPage(_Page, _cb) {
       const displayOfPage = $(_Page.id).css('display');
       // make sure it's not fading out a hidden or non existant element
       if (displayOfPage !== undefined && displayOfPage !== 'none') {
-        $(_Page.id).velocity('fadeOut', {
+        animatePageOpacity($(_Page.id), 0, {
           delay: ETCETER4_CONFIG.animations.fadeOutDelay,
           duration: ETCETER4_CONFIG.animations.fadeOutDuration,
           easing: 'ease-out',
@@ -388,7 +482,7 @@ function fadeOutPage(_Page, _cb) {
           complete() {
             try {
               // hide the current page when faded out
-              $(_Page.id).addClass('dn');
+              $(_Page.id).addClass('dn').css('display', 'none');
               _Page.isLoading = false;
               currentPage.isLoading = false;
               if (_cb) {
@@ -489,17 +583,15 @@ document.addEventListener('keydown', event => {
   const isMetaOrCtrl = event.metaKey || event.ctrlKey;
   if (isMetaOrCtrl && event.key === 'k') {
     event.preventDefault();
-    // Open search modal via DiscoveryController (lazy-init if needed)
-    if (typeof DiscoveryController !== 'undefined') {
-      const controller = DiscoveryController.getInstance();
-      if (!controller.isInitialized) {
-        controller.initialize().then(() => {
-          controller.openSearchModal();
-        });
-      } else {
-        controller.openSearchModal();
-      }
-    }
+    // main.js owns lazy search initialization; the controller owns modal events.
+    return;
+  }
+
+  // Let the active modal handle Escape/arrows without navigating behind it.
+  if (
+    typeof DiscoveryController !== 'undefined' &&
+    DiscoveryController.getInstance().isSearchModalOpen
+  ) {
     return;
   }
 

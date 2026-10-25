@@ -58,11 +58,9 @@ function handleHashChange() {
 
   const hash = window.location.hash || '#landing';
 
-  // Don't navigate if we're already on this page
-  if (currentPage && currentPage.id === hash) {
-    return;
-  }
-
+  // showNewSection decides whether the route is settled. During an outgoing
+  // fade, the old page can still be current even though a new route is pending.
+  // A back/forward event must therefore reach its latest-request queue.
   try {
     const targetPage = Page.findPage(hash);
     if (targetPage) {
@@ -142,112 +140,108 @@ function manageLandingCompositor() {
  * Cmd/Ctrl+K search bootstrap
  * Loads discovery scripts on first use, then delegates to DiscoveryController
  */
+let searchBootstrapPromise = null;
 document.addEventListener('keydown', e => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault();
-
-    // If DiscoveryController is already loaded, let it handle subsequent events
-    if (typeof DiscoveryController !== 'undefined') {
-      return;
-    }
-
-    // Load discovery chamber scripts on first Cmd+K press
-    if (typeof ChamberLoader !== 'undefined') {
-      const loader = ChamberLoader.getInstance();
-      if (loader.isRegistered('discovery')) {
-        loader.ensureLoaded('discovery').then(() => {
-          // Initialize ContentRegistry for search
-          if (typeof ContentRegistry !== 'undefined') {
-            try {
-              ContentRegistry.getInstance()
-                .initialize()
-                .then(() => {
-                  // Open search modal after scripts are ready
-                  const modal = document.getElementById('searchModal');
-                  if (modal) {
-                    modal.classList.remove('dn');
-                  }
-                  const input = document.getElementById('globalSearchInput');
-                  if (input) {
-                    input.focus();
-                  }
-                })
-                .catch(err => {
-                  console.warn('ContentRegistry init error:', err.message);
-                });
-            } catch (regErr) {
-              console.warn('ContentRegistry setup error:', regErr.message);
-            }
-          }
-        });
-      }
-    }
+  if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'k') {
+    return;
   }
+  e.preventDefault();
+  if (searchBootstrapPromise) {
+    return;
+  }
+  searchBootstrapPromise = Promise.resolve()
+    .then(async () => {
+      if (typeof DiscoveryController === 'undefined') {
+        await ChamberLoader.getInstance().ensureLoaded('discovery');
+      }
+      const controller = DiscoveryController.getInstance();
+      await controller.initialize();
+      controller.openSearchModal();
+    })
+    .catch(error => {
+      recoverNavigation(error, currentPage, '#discovery');
+    })
+    .finally(() => {
+      searchBootstrapPromise = null;
+    });
 });
 
-$(document).ready(() => {
-  const hash = window.location.hash;
+/** Report actual startup completion rather than the presence of partial globals. */
+function reportApplicationStartup(status, route = null) {
+  window.etceter4Startup = { status, route };
+  window.dispatchEvent(
+    new CustomEvent('etceter4:startup', { detail: window.etceter4Startup })
+  );
+}
 
-  // Goes to the section in the URL
-  if (hash) {
+/** Finish every visible startup route, including a recovered initial deep link. */
+function finishApplicationStartup(pageId) {
+  try {
+    manageLandingCompositor();
+  } catch (error) {
+    console.warn('Landing compositor initialization error:', error.message);
+  }
+  if (typeof initializeLivingPantheon === 'function') {
     try {
-      const _hash = $(hash);
-
-      currentPage = Page.findPage(hash);
-      currentPage.initPage().then(() => {
-        _hash.removeClass('dn');
-        if (hash === '#stills' || hash === '#diary') {
-          _hash.addClass('dt');
-        }
-
-        // Manage compositor on initial load
-        manageLandingCompositor();
-
-        // Initialize Living Pantheon system on first page load
-        if (typeof initializeLivingPantheon === 'function') {
-          try {
-            initializeLivingPantheon(hash);
-          } catch (pantheError) {
-            console.warn(
-              'Living Pantheon initialization error:',
-              pantheError.message
-            );
-          }
-        }
-      });
+      initializeLivingPantheon(pageId);
     } catch (error) {
-      // Fallback to landing page if hash is invalid
-      console.warn(`Invalid hash on load: ${hash}, defaulting to landing`);
-      $('#landing').removeClass('dn');
-      currentPage = Page.findPage('#landing');
-      window.location.hash = '#landing';
-
-      // Initialize Living Pantheon with landing page
-      if (typeof initializeLivingPantheon === 'function') {
-        try {
-          initializeLivingPantheon('#landing');
-        } catch (pantheError) {
-          console.warn(
-            'Living Pantheon initialization error:',
-            pantheError.message
-          );
-        }
-      }
-    }
-  } else {
-    $('#landing').removeClass('dn');
-    currentPage = Page.findPage('#landing');
-
-    // Initialize Living Pantheon with landing page (default)
-    if (typeof initializeLivingPantheon === 'function') {
-      try {
-        initializeLivingPantheon('#landing');
-      } catch (pantheError) {
-        console.warn(
-          'Living Pantheon initialization error:',
-          pantheError.message
-        );
-      }
+      console.warn('Living Pantheon initialization error:', error.message);
     }
   }
-});
+  reportApplicationStartup('ready', pageId);
+}
+
+function failApplicationStartup(error) {
+  console.error('Application startup failed:', error);
+  reportApplicationStartup('failed');
+}
+
+reportApplicationStartup('starting');
+try {
+  $(document).ready(() => {
+    // A promise boundary catches synchronous setup errors as well as rejected
+    // chamber loads. Missing Page data must reach the independent fallback.
+    Promise.resolve()
+      .then(() => {
+        const hash = window.location.hash;
+        if (hash) {
+          let target;
+          let element;
+          try {
+            element = $(hash);
+            target = Page.findPage(hash);
+          } catch (_error) {
+            console.warn(
+              `Invalid hash on load: ${hash}, defaulting to landing`
+            );
+            currentPage = Page.findPage('#landing');
+            $('#landing').removeClass('dn');
+            window.location.hash = '#landing';
+            finishApplicationStartup('#landing');
+            return;
+          }
+          currentPage = target;
+          return Promise.resolve()
+            .then(() => target.initPage())
+            .then(() => {
+              element.removeClass('dn');
+              if (hash === '#stills' || hash === '#diary') {
+                element.addClass('dt');
+              }
+              finishApplicationStartup(hash);
+            })
+            .catch(error => {
+              recoverNavigation(error, Page.findPage('#landing'), hash);
+              finishApplicationStartup('#landing');
+            });
+        }
+        currentPage = Page.findPage('#landing');
+        $('#landing').removeClass('dn');
+        finishApplicationStartup('#landing');
+      })
+      .catch(failApplicationStartup);
+  });
+} catch (error) {
+  // jQuery itself may have failed before its ready handler could be registered.
+  failApplicationStartup(error);
+}
