@@ -446,137 +446,427 @@ if (
   /**
    * Install event: pre-cache essential assets
    */
-  self.addEventListener('install', event => {
-    console.warn('[MediaSW] Installing...');
-    event.waitUntil(self.skipWaiting());
-  });
+  if (
+    typeof self !== 'undefined' &&
+    typeof self.addEventListener === 'function'
+  ) {
+    self.addEventListener('install', event => {
+      console.warn('[MediaSW] Installing...');
+      event.waitUntil(self.skipWaiting());
+    });
 
-  /**
-   * Activate event: clean up old caches
-   * Namespaced: only deletes obsolete media caches (prefixed with etceter4-media- or legacy media-cache-)
-   * Never deletes caches belonging to root sw.js (etceter4-shell- or etceter4-v)
-   */
-  self.addEventListener('activate', event => {
-    console.warn('[MediaSW] Activating...');
+    /**
+     * Activate event: clean up old caches
+     * Namespaced: only deletes obsolete media caches (prefixed with etceter4-media- or legacy media-cache-)
+     * Never deletes caches belonging to root sw.js (etceter4-shell- or etceter4-v)
+     */
+    self.addEventListener('activate', event => {
+      console.warn('[MediaSW] Activating...');
 
-    event.waitUntil(
-      caches
-        .keys()
-        .then(cacheNames => {
-          return Promise.all(
-            cacheNames.map(cacheName => {
-              if (
-                (cacheName.startsWith(MEDIA_CACHE_PREFIX) ||
-                  cacheName.startsWith('media-cache-')) &&
-                !ALL_CACHES.includes(cacheName)
-              ) {
-                console.warn('[MediaSW] Deleting old cache:', cacheName);
-                return caches.delete(cacheName);
-              }
+      event.waitUntil(
+        caches
+          .keys()
+          .then(cacheNames => {
+            return Promise.all(
+              cacheNames.map(cacheName => {
+                if (
+                  (cacheName.startsWith(MEDIA_CACHE_PREFIX) ||
+                    cacheName.startsWith('media-cache-')) &&
+                  !ALL_CACHES.includes(cacheName)
+                ) {
+                  console.warn('[MediaSW] Deleting old cache:', cacheName);
+                  return caches.delete(cacheName);
+                }
+              })
+            );
+          })
+          .then(() => self.clients.claim())
+      );
+    });
+
+    /**
+     * Fetch event: intercept media requests
+     */
+    self.addEventListener('fetch', event => {
+      const { request } = event;
+      const url = new URL(request.url);
+
+      // Only handle R2 media URLs and same-origin requests
+      const isMediaURL =
+        url.hostname === 'media.etceter4.com' ||
+        url.origin === self.location.origin;
+      const isMediaRequest =
+        isAudioFile(url) ||
+        isThumbnailFile(url) ||
+        isWaveformFile(url) ||
+        isMetadataFile(url);
+
+      if (!isMediaURL || !isMediaRequest) {
+        return;
+      }
+
+      // Load config on first fetch
+      loadCacheConfig();
+
+      const cacheName = getCacheStore(request);
+
+      if (!cacheName) {
+        return;
+      }
+
+      // Choose strategy based on file type
+      if (isAudioFile(url)) {
+        // Audio: network-first for fresh content, cache fallback
+        event.respondWith(networkFirstStrategy(request, cacheName));
+      } else if (isThumbnailFile(url)) {
+        // Thumbnails: cache-first with aggressive caching
+        event.respondWith(cacheFirstStrategy(request, cacheName));
+      } else if (isWaveformFile(url) || isMetadataFile(url)) {
+        // Waveforms/metadata: cache-first with long TTL
+        event.respondWith(cacheFirstStrategy(request, cacheName));
+      }
+    });
+
+    /**
+     * Message event: handle cache management commands
+     */
+    self.addEventListener('message', event => {
+      const { type, payload } = event.data;
+
+      switch (type) {
+        case 'CLEAR_AUDIO_CACHE':
+          event.waitUntil(
+            caches.delete(AUDIO_CACHE).then(() => {
+              event.ports[0].postMessage({ success: true });
             })
           );
-        })
-        .then(() => self.clients.claim())
-    );
-  });
+          break;
 
-  /**
-   * Fetch event: intercept media requests
-   */
-  self.addEventListener('fetch', event => {
-    const { request } = event;
-    const url = new URL(request.url);
+        case 'CLEAR_ALL_CACHES':
+          event.waitUntil(
+            Promise.all(ALL_CACHES.map(cache => caches.delete(cache))).then(
+              () => {
+                event.ports[0].postMessage({ success: true });
+              }
+            )
+          );
+          break;
 
-    // Only handle R2 media URLs and same-origin requests
-    const isMediaURL =
-      url.hostname === 'media.etceter4.com' ||
-      url.origin === self.location.origin;
-    const isMediaRequest =
-      isAudioFile(url) ||
-      isThumbnailFile(url) ||
-      isWaveformFile(url) ||
-      isMetadataFile(url);
-
-    if (!isMediaURL || !isMediaRequest) {
-      return;
-    }
-
-    // Load config on first fetch
-    loadCacheConfig();
-
-    const cacheName = getCacheStore(request);
-
-    if (!cacheName) {
-      return;
-    }
-
-    // Choose strategy based on file type
-    if (isAudioFile(url)) {
-      // Audio: network-first for fresh content, cache fallback
-      event.respondWith(networkFirstStrategy(request, cacheName));
-    } else if (isThumbnailFile(url)) {
-      // Thumbnails: cache-first with aggressive caching
-      event.respondWith(cacheFirstStrategy(request, cacheName));
-    } else if (isWaveformFile(url) || isMetadataFile(url)) {
-      // Waveforms/metadata: cache-first with long TTL
-      event.respondWith(cacheFirstStrategy(request, cacheName));
-    }
-  });
-
-  /**
-   * Message event: handle cache management commands
-   */
-  self.addEventListener('message', event => {
-    const { type, payload } = event.data;
-
-    switch (type) {
-      case 'CLEAR_AUDIO_CACHE':
-        event.waitUntil(
-          caches.delete(AUDIO_CACHE).then(() => {
-            event.ports[0].postMessage({ success: true });
-          })
-        );
-        break;
-
-      case 'CLEAR_ALL_CACHES':
-        event.waitUntil(
-          Promise.all(ALL_CACHES.map(cache => caches.delete(cache))).then(
-            () => {
-              event.ports[0].postMessage({ success: true });
-            }
-          )
-        );
-        break;
-
-      case 'GET_CACHE_SIZE':
-        event.waitUntil(
-          (async () => {
-            let totalSize = 0;
-            for (const cacheName of ALL_CACHES) {
-              const cache = await caches.open(cacheName);
-              const requests = await cache.keys();
-              for (const request of requests) {
-                const response = await cache.match(request);
-                if (response) {
-                  totalSize +=
-                    parseInt(response.headers.get('content-length')) || 0;
+        case 'GET_CACHE_SIZE':
+          event.waitUntil(
+            (async () => {
+              let totalSize = 0;
+              for (const cacheName of ALL_CACHES) {
+                const cache = await caches.open(cacheName);
+                const requests = await cache.keys();
+                for (const request of requests) {
+                  const response = await cache.match(request);
+                  if (response) {
+                    totalSize +=
+                      parseInt(response.headers.get('content-length')) || 0;
+                  }
                 }
               }
-            }
-            event.ports[0].postMessage({ size: totalSize });
-          })()
-        );
-        break;
+              event.ports[0].postMessage({ size: totalSize });
+            })()
+          );
+          break;
 
-      case 'UPDATE_CONFIG':
-        if (payload && payload.cache) {
-          cacheConfig = { ...DEFAULT_CONFIG, ...payload.cache };
-          event.ports[0].postMessage({ success: true });
-        }
-        break;
+        case 'UPDATE_CONFIG':
+          if (payload && payload.cache) {
+            cacheConfig = { ...DEFAULT_CONFIG, ...payload.cache };
+            event.ports[0].postMessage({ success: true });
+          }
+          break;
 
-      default:
-        console.warn('[MediaSW] Unknown message type:', type);
+        default:
+          console.warn('[MediaSW] Unknown message type:', type);
+      }
+    });
+  }
+}
+
+/**
+ * Core shell assets that must be protected from eviction
+ */
+const PROTECTED_SHELL_PATTERNS = [
+  'index.html',
+  'offline.html',
+  'styles.css',
+  'sw.js',
+  'manifest.json',
+  'source-catalogue.js',
+  'page.js',
+  'config.js',
+];
+
+/**
+ * Parse and evaluate an HTTP Range header against a total content byte length.
+ * Follows RFC 7233 / RFC 9110 byte-range specification.
+ *
+ * @param {number} totalByteLength - Total length of the resource in bytes
+ * @param {string} [rangeHeader] - HTTP Range request header (e.g. 'bytes=0-499', 'bytes=1000-', 'bytes=-500')
+ * @returns {{
+ *   status: 206 | 416,
+ *   start: number | null,
+ *   end: number | null,
+ *   contentLength: number,
+ *   contentRange: string
+ * }}
+ */
+function evaluateRangeSlice(totalByteLength, rangeHeader) {
+  const total = Number(totalByteLength);
+  if (!Number.isFinite(total) || total <= 0) {
+    return {
+      status: 416,
+      start: null,
+      end: null,
+      contentLength: 0,
+      contentRange: `bytes */${Math.max(0, Number.isFinite(total) ? total : 0)}`,
+    };
+  }
+
+  if (
+    typeof rangeHeader !== 'string' ||
+    !rangeHeader.trim().startsWith('bytes=')
+  ) {
+    return {
+      status: 416,
+      start: null,
+      end: null,
+      contentLength: 0,
+      contentRange: `bytes */${total}`,
+    };
+  }
+
+  const rangeSpec = rangeHeader.trim().slice(6).trim();
+  const match = rangeSpec.match(/^(\d*)-(\d*)$/);
+  if (!match) {
+    return {
+      status: 416,
+      start: null,
+      end: null,
+      contentLength: 0,
+      contentRange: `bytes */${total}`,
+    };
+  }
+
+  const [, startStr, endStr] = match;
+
+  // Case 1: Suffix range ("-suffix")
+  if (!startStr && endStr) {
+    const suffix = parseInt(endStr, 10);
+    if (suffix <= 0) {
+      return {
+        status: 416,
+        start: null,
+        end: null,
+        contentLength: 0,
+        contentRange: `bytes */${total}`,
+      };
     }
-  });
+    const start = Math.max(0, total - suffix);
+    const end = total - 1;
+    const contentLength = end - start + 1;
+    return {
+      status: 206,
+      start,
+      end,
+      contentLength,
+      contentRange: `bytes ${start}-${end}/${total}`,
+    };
+  }
+
+  // Case 2: Open-ended range ("start-")
+  if (startStr && !endStr) {
+    const start = parseInt(startStr, 10);
+    if (start >= total || start < 0) {
+      return {
+        status: 416,
+        start: null,
+        end: null,
+        contentLength: 0,
+        contentRange: `bytes */${total}`,
+      };
+    }
+    const end = total - 1;
+    const contentLength = end - start + 1;
+    return {
+      status: 206,
+      start,
+      end,
+      contentLength,
+      contentRange: `bytes ${start}-${end}/${total}`,
+    };
+  }
+
+  // Case 3: Explicit range ("start-end")
+  if (startStr && endStr) {
+    const rawStart = parseInt(startStr, 10);
+    const rawEnd = parseInt(endStr, 10);
+
+    if (rawStart < 0 || rawStart >= total || rawStart > rawEnd) {
+      return {
+        status: 416,
+        start: null,
+        end: null,
+        contentLength: 0,
+        contentRange: `bytes */${total}`,
+      };
+    }
+
+    const start = rawStart;
+    const end = Math.min(rawEnd, total - 1);
+    const contentLength = end - start + 1;
+    return {
+      status: 206,
+      start,
+      end,
+      contentLength,
+      contentRange: `bytes ${start}-${end}/${total}`,
+    };
+  }
+
+  // Neither start nor end provided ("bytes=-")
+  return {
+    status: 416,
+    start: null,
+    end: null,
+    contentLength: 0,
+    contentRange: `bytes */${total}`,
+  };
+}
+
+/**
+ * Plan cache eviction using an LRU policy while protecting pinned shell assets.
+ *
+ * @param {Array<Object>} entries - Array of cache entry descriptors
+ *   Each entry can have: { url, size, lastAccessed, timestamp, isPinned, isShell, cacheName }
+ * @param {number} maxBytes - Maximum allowed cache capacity in bytes
+ * @returns {{
+ *   evict: Array<Object>,
+ *   retain: Array<Object>,
+ *   totalBytesBefore: number,
+ *   totalBytesAfter: number,
+ *   evictedBytes: number
+ * }}
+ */
+function planCacheEviction(entries, maxBytes) {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return {
+      evict: [],
+      retain: [],
+      totalBytesBefore: 0,
+      totalBytesAfter: 0,
+      evictedBytes: 0,
+    };
+  }
+
+  const limit = Math.max(0, Number(maxBytes) || 0);
+
+  function isProtected(entry) {
+    if (!entry) {
+      return false;
+    }
+    if (entry.isPinned === true || entry.isShell === true) {
+      return true;
+    }
+    if (
+      typeof entry.cacheName === 'string' &&
+      (entry.cacheName.startsWith('etceter4-v') ||
+        entry.cacheName.includes('shell') ||
+        entry.cacheName.includes('static'))
+    ) {
+      return true;
+    }
+    if (typeof entry.url === 'string') {
+      const urlLower = entry.url.toLowerCase();
+      if (
+        PROTECTED_SHELL_PATTERNS.some(
+          pat => urlLower.endsWith(pat) || urlLower.includes(`/${pat}`)
+        )
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  let totalBytesBefore = 0;
+  const pinnedEntries = [];
+  const evictableEntries = [];
+
+  for (const entry of entries) {
+    const size = Math.max(0, Number(entry.size) || 0);
+    totalBytesBefore += size;
+
+    if (isProtected(entry)) {
+      pinnedEntries.push({ ...entry, size });
+    } else {
+      evictableEntries.push({
+        ...entry,
+        size,
+        lastAccessed: Number(entry.lastAccessed ?? entry.timestamp ?? 0),
+      });
+    }
+  }
+
+  // If already under budget, retain all
+  if (totalBytesBefore <= limit) {
+    return {
+      evict: [],
+      retain: [...pinnedEntries, ...evictableEntries],
+      totalBytesBefore,
+      totalBytesAfter: totalBytesBefore,
+      evictedBytes: 0,
+    };
+  }
+
+  // Sort evictable entries by LRU (oldest lastAccessed/timestamp first)
+  evictableEntries.sort((a, b) => a.lastAccessed - b.lastAccessed);
+
+  const pinnedSize = pinnedEntries.reduce((acc, e) => acc + e.size, 0);
+  let currentBytes =
+    pinnedSize + evictableEntries.reduce((acc, e) => acc + e.size, 0);
+
+  const evict = [];
+  const retainEvictable = [];
+
+  for (const entry of evictableEntries) {
+    if (currentBytes > limit) {
+      evict.push(entry);
+      currentBytes -= entry.size;
+    } else {
+      retainEvictable.push(entry);
+    }
+  }
+
+  const retain = [...pinnedEntries, ...retainEvictable];
+  const totalBytesAfter = retain.reduce((acc, e) => acc + e.size, 0);
+  const evictedBytes = evict.reduce((acc, e) => acc + e.size, 0);
+
+  return {
+    evict,
+    retain,
+    totalBytesBefore,
+    totalBytesAfter,
+    evictedBytes,
+  };
+}
+
+// Attach to environments (Workers, Window/Global, and CommonJS)
+if (typeof self !== 'undefined') {
+  self.evaluateRangeSlice = evaluateRangeSlice;
+  self.planCacheEviction = planCacheEviction;
+}
+if (typeof globalThis !== 'undefined') {
+  globalThis.evaluateRangeSlice = evaluateRangeSlice;
+  globalThis.planCacheEviction = planCacheEviction;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    ...module.exports,
+    evaluateRangeSlice,
+    planCacheEviction,
+  };
 }
