@@ -732,5 +732,38 @@ describe('DiscoveryController', () => {
       expect(sessionStorage.getItem('etceter4-highlight-item')).toBe('item-1');
       expect(instance.isSearchModalOpen).toBe(false);
     });
+
+    it('returns a comprehensive diagnostic telemetry snapshot via getNavigationDiagnosticSnapshot()', async () => {
+      const instance = DiscoveryController.getInstance();
+      await instance.initialize();
+
+      mocks.filterSystem.getState.mockReturnValue({
+        tags: ['ambient', 'drone'],
+        chambers: ['odeion'],
+        types: ['audio'],
+        wings: ['east'],
+        statuses: [],
+        fromYear: 2020,
+        toYear: null,
+      });
+
+      window.location.hash = '#ergasterion';
+      sessionStorage.setItem('etceter4-highlight-item', 'track-99');
+
+      const snapshot = instance.getNavigationDiagnosticSnapshot();
+      expect(snapshot).toEqual({
+        activeChamber: 'ergasterion',
+        highlightItem: 'track-99',
+        isSearchModalOpen: false,
+        filterCount: 6, // 2 tags + 1 chamber + 1 type + 1 wing + 1 fromYear
+        historyDepth: expect.any(Number),
+      });
+
+      // Static method call test
+      const staticSnapshot =
+        DiscoveryController.getNavigationDiagnosticSnapshot();
+      expect(staticSnapshot.activeChamber).toBe('ergasterion');
+      expect(staticSnapshot.filterCount).toBe(6);
+    });
   });
 });

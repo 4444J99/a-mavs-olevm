@@ -50,6 +50,15 @@ class DiscoveryController {
   }
 
   /**
+   * Static method to retrieve navigation diagnostic telemetry snapshot
+   * @static
+   * @returns {Object}
+   */
+  static getNavigationDiagnosticSnapshot() {
+    return DiscoveryController.getInstance().getNavigationDiagnosticSnapshot();
+  }
+
+  /**
    * Create a new DiscoveryController instance
    * @private
    */
@@ -919,6 +928,65 @@ class DiscoveryController {
       resultCount: this.currentResults.length,
       searchQuery: this.currentSearchQuery,
       isSearchModalOpen: this.isSearchModalOpen,
+    };
+  }
+
+  /**
+   * Get navigation diagnostic snapshot for telemetry, state recovery, and cross-chamber monitoring
+   * @returns {{
+   *   activeChamber: string,
+   *   highlightItem: string|null,
+   *   isSearchModalOpen: boolean,
+   *   filterCount: number,
+   *   historyDepth: number
+   * }}
+   */
+  getNavigationDiagnosticSnapshot() {
+    let filterCount = 0;
+    if (this.filterSystem && typeof this.filterSystem.getState === 'function') {
+      const state = this.filterSystem.getState();
+      filterCount =
+        (state.tags?.length || 0) +
+        (state.chambers?.length || 0) +
+        (state.types?.length || 0) +
+        (state.wings?.length || 0) +
+        (state.statuses?.length || 0) +
+        (state.fromYear ? 1 : 0) +
+        (state.toYear ? 1 : 0);
+    }
+
+    let activeChamber = 'landing';
+    if (typeof window !== 'undefined') {
+      if (window.currentPage && window.currentPage.id) {
+        activeChamber = String(window.currentPage.id).replace(/^#/, '');
+      } else if (window.location && window.location.hash) {
+        activeChamber =
+          String(window.location.hash).replace(/^#/, '') || 'landing';
+      }
+    }
+
+    let highlightItem = null;
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        highlightItem = sessionStorage.getItem('etceter4-highlight-item');
+      }
+    } catch (_err) {
+      // Storage access restricted
+    }
+
+    const historyDepth =
+      typeof window !== 'undefined' &&
+      window.history &&
+      typeof window.history.length === 'number'
+        ? window.history.length
+        : 1;
+
+    return {
+      activeChamber,
+      highlightItem,
+      isSearchModalOpen: Boolean(this.isSearchModalOpen),
+      filterCount,
+      historyDepth,
     };
   }
 
