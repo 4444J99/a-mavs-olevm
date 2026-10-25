@@ -1,0 +1,119 @@
+{
+  "schema": "gmse.stewardship_reconciliation.v1",
+  "owner": "https://github.com/4444J99/generative-multimedia-spatial-environment/issues/134",
+  "original_pr": 136,
+  "original_head": "2552813a0ab57ce6db376519b49175019d4dc7b4",
+  "based_on_runtime_dependency_head": "bda877e61c4caa327530eb4f6c5e6feb1d852f80",
+  "records": [
+    {
+      "path": ".github/copilot-instructions.md",
+      "original_blob": "9b7a8b6bc14b742f2287595d5d37f7a9e717cac0",
+      "original_sha256": "eb9b864dffc5f356e570a9e1adc72e3c6dfba7fb27defcd1f39d8a263cfc77d0",
+      "candidate_sha256": "fe9a298d7c5eb551e8ca2ab2836c856c09b2706a365d92da9debb219c17c2da1",
+      "disposition": "steward_intent_recovered_and_commands_runtime_examples_corrected"
+    },
+    {
+      "path": ".github/workflows/project-automation.yml",
+      "original_blob": "0f805e5cde1a6518441edfb03586cfc9e48081f7",
+      "original_sha256": "a9518deda65d94c712ac9f7e6e8a9780eaa8f4200f79755c9d6480840c0ae95e",
+      "candidate_sha256": "d2ae453f526a3001156f6366af53d7019d336d1c5e8ba0b271430a92730335d4",
+      "disposition": "current_trusted_default_and_updated_pins_preserved"
+    },
+    {
+      "path": ".github/workflows/stewardship.yml",
+      "original_blob": "5e2f07b61720bea0de9107aedbdd91d00012735f",
+      "original_sha256": "7770ecde32413b59b390304c02232143d6f27b0ac8430b40b5658ce26db19e72",
+      "candidate_sha256": "dafebaac8491c1d6a175af1782280a742b9c8117d44086990cd95ebf1dd95982",
+      "disposition": "current_trusted_default_and_updated_pins_preserved"
+    },
+    {
+      "path": "AGENTS.md",
+      "original_blob": "152244f847e78b5900bfb6be47ddf5ad4c085391",
+      "original_sha256": "cfecca1754c3a2885f65c4451df9c19ee092be0b6ad5713f5126dbceb40aec3d",
+      "candidate_sha256": "cfecca1754c3a2885f65c4451df9c19ee092be0b6ad5713f5126dbceb40aec3d",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "BRANCHES.md",
+      "original_blob": "e3f73801a6ffe86cad98cf8efb3f038b86ed2117",
+      "original_sha256": "86a81722ef61430b0fdca554bf5d3a042fe3abc5fe013b2ae9a0eef4a48633a9",
+      "candidate_sha256": "86a81722ef61430b0fdca554bf5d3a042fe3abc5fe013b2ae9a0eef4a48633a9",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "STATUS.md",
+      "original_blob": "1d8c15b63bf3fcc684a7c68ed86b568a1fd50a7d",
+      "original_sha256": "f5147550d95982c503323a5a96f20087bf9ef8abde881302d92ad1ae042a08bb",
+      "candidate_sha256": "59d9591f16a55fca68d904e224bf07907ac3a011ef1abf9267d7cadbc971c627",
+      "disposition": "original_dated_record_and_later_receipt_retained_editorial_duplicate_removed"
+    },
+    {
+      "path": "docs/REPOSITORY_STEWARDSHIP.md",
+      "original_blob": "ee23637ba2455ffc8bc8cc8c495dcc25d84e5b7c",
+      "original_sha256": "02c6be20a2123d03ae925cd2b8292ed71927d09543436cb96593aa6554969ae1",
+      "candidate_sha256": "02c6be20a2123d03ae925cd2b8292ed71927d09543436cb96593aa6554969ae1",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "docs/stewardship/CI-ENABLEMENT-CAPABILITY-2026-09-13.md",
+      "original_blob": "81e0dc59026eb7eb38fbf8f7e2cad17f4c757b9a",
+      "original_sha256": "6577580ea07349c19fddc5d852e9d1abca0779e465b4c31ccb59b3af63b78c46",
+      "candidate_sha256": "bf3c5cd32ebcfce321df7510bd83ffacf0e3e2e83577a0f593d12d72a0880edb",
+      "disposition": "original_body_verbatim_with_historical_provenance_header"
+    },
+    {
+      "path": "docs/stewardship/EDITION-EXECUTION-PLAN-2026-09-13.md",
+      "original_blob": "3ab522b84d0033f670c16c28e7f5d16f7e71e0e7",
+      "original_sha256": "6f9254f7a14c35054f0e437b33c267d5f925f047ca330835bccec63828d2476c",
+      "candidate_sha256": "73cf4b22b1a694bcebc7bdbb858adaf0b307b0064b40731aa5317470dbb18abc",
+      "disposition": "original_body_verbatim_with_historical_provenance_header"
+    },
+    {
+      "path": "docs/stewardship/INVENTORY-VERDICTS-WAVES-2026-09-13.md",
+      "original_blob": "2372256afd96f0d5fa53df4c1ae72a88fb07deae",
+      "original_sha256": "837f21d2c9c2b0a9a202ce84b1d653183a48413af362f36083f5bacb8ab2959d",
+      "candidate_sha256": "aa456d68778fb28281769ef37ca5c90806cc45db80c203b83190f1a5339e9fb6",
+      "disposition": "original_body_verbatim_with_historical_provenance_header"
+    },
+    {
+      "path": "docs/stewardship/closed-unmerged-2026-09-13.json",
+      "original_blob": "92c19d2ed4139fe9cb481c3266dbd62ab6c8b0a6",
+      "original_sha256": "36ff9e133bfd73db4712913c56de6f0283d9399b6526eec7a86ae4f5bbd6dbad",
+      "candidate_sha256": "36ff9e133bfd73db4712913c56de6f0283d9399b6526eec7a86ae4f5bbd6dbad",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "scripts/stewardship.cjs",
+      "original_blob": "360b037ba1cd396ffbe0477a1bc4497bb88a19b3",
+      "original_sha256": "40309312d328985ec80bc22f2dbe597d4c578cad2b0657da1e02ede470236403",
+      "candidate_sha256": "40309312d328985ec80bc22f2dbe597d4c578cad2b0657da1e02ede470236403",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/governance/known-labels.json",
+      "original_blob": "9d634c204f00bb0294d79ee3f6f2e290740036e9",
+      "original_sha256": "53eeda680a32211dc64540add52b087995f156b6024a1c2ca48bf89b722d2ebb",
+      "candidate_sha256": "53eeda680a32211dc64540add52b087995f156b6024a1c2ca48bf89b722d2ebb",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/governance/stewardship.test.cjs",
+      "original_blob": "7bf2143b12d453693e891137dff4d750c66a46f5",
+      "original_sha256": "ce15ba72000b97d9bb5086fa20c02685cb26775a392d31ea02e25086101a136e",
+      "candidate_sha256": "f271dac568304b5eb57d3ba344386e6c93619ce03f5abdbb1bac4816532e1fcb",
+      "disposition": "original_assertions_retained_with_current_Vitest_adapter_and_trusted_default_test"
+    }
+  ],
+  "validation": {
+    "original_member_paths": 14,
+    "historical_closed_unmerged_records": 42,
+    "generated_AGENTS_block": "unchanged; entire file matches original authored candidate",
+    "governance_tests": {
+      "passed": 11,
+      "runtime": "Node24.19.0 / Vitest5.0.5"
+    },
+    "local_markdown_links": "all resolve",
+    "whitespace": "passed"
+  },
+  "acceptance_boundary": "Historical dated permissions/statuses/queue order remain evidence only. Current operational activation/enforcement, default integration, deployment and artwork/device/custody acceptance remain separate; no original carrier or source/media is retired."
+}
