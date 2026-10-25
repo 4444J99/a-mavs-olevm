@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Green CI confirmed on dependabot github_actions update at head 0c543b9 (workflow run 38849137129).
-- Green Secret Scan confirmed on navigation recovery / SW cache / OGOD bindings fix at head 2a58378 (workflow run 40188661363).
+- Stewardship Protocol success on fix(nav,cache,publication): reconcile navigation recovery, isolate SW cache namespaces, and verify OGOD bindings (commit 2a58378903cf17805454481efd827fe0bb7f8585, run 40188661359). Green progress polish.
 
 ## [0.1.0] - 2026-02-11
 
