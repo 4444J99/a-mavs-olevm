@@ -151,6 +151,7 @@ document.addEventListener('keydown', e => {
   }
   searchBootstrapPromise = Promise.resolve()
     .then(async () => {
+      document.getElementById('search-error')?.remove();
       if (typeof DiscoveryController === 'undefined') {
         await ChamberLoader.getInstance().ensureLoaded('discovery');
       }
@@ -159,7 +160,14 @@ document.addEventListener('keydown', e => {
       controller.openSearchModal();
     })
     .catch(error => {
-      recoverNavigation(error, currentPage, '#discovery');
+      console.warn('Search unavailable:', error);
+      const message = document.createElement('aside');
+      message.id = 'search-error';
+      message.className = 'fixed top-0 left-0 right-0 pa3 bg-white black z-999';
+      message.setAttribute('role', 'alert');
+      message.textContent =
+        'Search could not load. Your page is still available. Press Cmd/Ctrl+K to retry.';
+      document.body.appendChild(message);
     })
     .finally(() => {
       searchBootstrapPromise = null;
@@ -196,6 +204,35 @@ function failApplicationStartup(error) {
   reportApplicationStartup('failed');
 }
 
+/** Validate dependencies required by the next navigation, even on landing. */
+function verifyNavigationRuntime() {
+  const animations =
+    typeof ETCETER4_CONFIG !== 'undefined' && ETCETER4_CONFIG?.animations;
+  const timings = [
+    'fadeInDuration',
+    'fadeOutDuration',
+    'fadeOutDelay',
+    'transitionCooldown',
+  ];
+  if (
+    !animations ||
+    timings.some(
+      key => !Number.isFinite(animations[key]) || animations[key] < 0
+    )
+  ) {
+    throw new Error('Navigation configuration unavailable');
+  }
+  if (
+    typeof ChamberLoader === 'undefined' ||
+    typeof ChamberLoader?.getInstance !== 'function' ||
+    typeof ChamberLoader.getInstance()?.ensureLoaded !== 'function' ||
+    typeof ScriptLoader === 'undefined' ||
+    typeof ScriptLoader?.loadSequence !== 'function'
+  ) {
+    throw new Error('Navigation loaders unavailable');
+  }
+}
+
 reportApplicationStartup('starting');
 try {
   $(document).ready(() => {
@@ -203,6 +240,7 @@ try {
     // chamber loads. Missing Page data must reach the independent fallback.
     Promise.resolve()
       .then(() => {
+        verifyNavigationRuntime();
         const hash = window.location.hash;
         if (hash) {
           let target;
