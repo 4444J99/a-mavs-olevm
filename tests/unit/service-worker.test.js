@@ -109,6 +109,130 @@ const request = (path, options) => new Request(new URL(path, origin), options);
 const offline = w => w.fetch.mockRejectedValue(new TypeError('offline'));
 
 describe('root service worker', () => {
+  it('serializes an expiry scan with a foreground refresh of the same entry', async () => {
+    const w = worker();
+    const path = '/media/covers/race.png';
+    await w.seed(media[1], path, 'expired', { timestamp: 0, ttl: 1 });
+    let release;
+    let observed;
+    const held = new Promise(resolve => {
+      release = resolve;
+    });
+    const scanning = new Promise(resolve => {
+      observed = resolve;
+    });
+    const open = w.caches.open;
+    let holdOnce = true;
+    w.caches.open = async name => {
+      const cache = await open(name);
+      return {
+        ...cache,
+        match: async request => {
+          const response = await cache.match(request);
+          if (name === media[1] && holdOnce) {
+            holdOnce = false;
+            observed();
+            await held;
+          }
+          return response;
+        },
+      };
+    };
+    const updating = w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxThumbnailEntries: 1 } },
+      },
+    });
+    await scanning;
+    const fetching = w.dispatch('fetch', { request: request(path) });
+    expect(await (await fetching.response).text()).toBe('network');
+    release();
+    await updating;
+    await fetching.finish();
+    expect(await (await (await open(media[1])).match(path)).text()).toBe(
+      'network'
+    );
+  });
+
+  it.each([
+    [1, 'maxThumbnailEntries', '/media/covers/', '.png'],
+    [2, 'maxWaveformEntries', '/media/waveforms/', '.json'],
+    [3, 'maxMetadataEntries', '/media/metadata/', '.json'],
+  ])(
+    'expires and bounds owned media store %s on configuration and writes',
+    async (index, key, base, extension) => {
+      const w = worker();
+      const old = base + 'old' + extension;
+      const stale = base + 'expired' + extension;
+      const fresh = base + 'new' + extension;
+      await w.seed(media[index], old, 'old', {
+        timestamp: Date.now() - 5000,
+        ttl: 100000,
+      });
+      await w.seed(media[index], stale, 'expired', { timestamp: 0, ttl: 1 });
+      await w.seed(shell, '/sentinel', 'shell');
+      await w.seed('another-app', '/sentinel', 'unrelated');
+      await w.emit('message', {
+        data: { type: 'UPDATE_CONFIG', payload: { cache: { [key]: 1 } } },
+      });
+      const cache = await w.caches.open(media[index]);
+      expect(await cache.match(stale)).toBeUndefined();
+      expect(await cache.match(old)).toBeDefined();
+      expect(
+        await (await w.emit('fetch', { request: request(fresh) })).text()
+      ).toBe('network');
+      expect(await cache.match(old)).toBeUndefined();
+      expect((await cache.keys()).map(x => x.url)).toEqual([origin + fresh]);
+      expect(
+        await (await (await w.caches.open(shell)).match('/sentinel')).text()
+      ).toBe('shell');
+      expect(
+        await (
+          await (await w.caches.open('another-app')).match('/sentinel')
+        ).text()
+      ).toBe('unrelated');
+    }
+  );
+
+  it('zero non-audio capacity preserves delivery without retaining entries', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxThumbnailEntries: 0 } },
+      },
+    });
+    expect(
+      await (
+        await w.emit('fetch', { request: request('/media/covers/new.png') })
+      ).text()
+    ).toBe('network');
+    expect(await (await w.caches.open(media[1])).keys()).toEqual([]);
+  });
+
+  it.each([-1, 0.5, NaN, Infinity])(
+    'ignores invalid entry capacity %s',
+    async invalid => {
+      const w = worker();
+      for (const value of [1, invalid]) {
+        await w.emit('message', {
+          data: {
+            type: 'UPDATE_CONFIG',
+            payload: { cache: { maxMetadataEntries: value } },
+          },
+        });
+      }
+      await w.emit('fetch', { request: request('/media/metadata/first.json') });
+      await w.emit('fetch', {
+        request: request('/media/metadata/second.json'),
+      });
+      expect(
+        (await (await w.caches.open(media[3])).keys()).map(x => x.url)
+      ).toEqual([origin + '/media/metadata/second.json']);
+    }
+  );
+
   it('uses the resolver absolute local media root under a site subpath', async () => {
     const w = worker('sw.js', { base: '/a-mavs-olevm' });
     await w.seed(media[1], '/media/covers/local.jpg', 'cached local');

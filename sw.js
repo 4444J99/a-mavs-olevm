@@ -114,8 +114,26 @@ const MEDIA_DEFAULTS = {
   audioTTL: 604800000,
   thumbnailTTL: 86400000,
   maxAudioCacheSize: 104857600,
+  maxThumbnailEntries: 100,
+  maxWaveformEntries: 50,
+  maxMetadataEntries: 50,
 };
 const mediaConfig = { ...MEDIA_DEFAULTS };
+const ENTRY_LIMIT_KEYS = [
+  'maxThumbnailEntries',
+  'maxWaveformEntries',
+  'maxMetadataEntries',
+];
+const mediaMaintenance = new Map();
+
+function queueMediaMaintenance(store, task) {
+  const previous = mediaMaintenance.get(store) || Promise.resolve();
+  const next = previous.catch(() => {}).then(task);
+  mediaMaintenance.set(store, next);
+  return next.finally(() => {
+    if (mediaMaintenance.get(store) === next) mediaMaintenance.delete(store);
+  });
+}
 
 function mediaStore(url) {
   const path = url.pathname.toLowerCase();
@@ -161,13 +179,18 @@ async function storeMedia(cache, store, request, response) {
     );
     await cache.put(
       request,
-      new Response(response.clone().body, {
+      new Response(response.body, {
         status: response.status,
         statusText: response.statusText,
         headers,
       })
     );
     if (store === MEDIA_CACHES[0]) await trimAudio(cache);
+    else
+      await trimEntries(
+        cache,
+        mediaConfig[ENTRY_LIMIT_KEYS[MEDIA_CACHES.indexOf(store) - 1]]
+      );
   } catch (error) {
     // A quota/storage failure must not turn a playable network response into 503.
     console.warn('[MediaSW] Cache write failed:', error);
@@ -194,6 +217,29 @@ async function trimAudio(cache) {
     if (total <= mediaConfig.maxAudioCacheSize) break;
     await cache.delete(entry.request);
     total -= entry.size;
+  }
+}
+
+async function trimEntries(cache, limit) {
+  const entries = [];
+  const now = Date.now();
+  for (const request of await cache.keys()) {
+    const response = await cache.match(request);
+    if (!response) continue;
+    const metadata = mediaMetadata(response);
+    if (
+      Number.isFinite(metadata?.timestamp) &&
+      Number.isFinite(metadata?.ttl) &&
+      now - metadata.timestamp >= metadata.ttl
+    ) {
+      await cache.delete(request);
+      continue;
+    }
+    entries.push({ request, timestamp: metadata?.timestamp || 0 });
+  }
+  entries.sort((a, b) => a.timestamp - b.timestamp);
+  for (const entry of entries.slice(0, Math.max(0, entries.length - limit))) {
+    await cache.delete(entry.request);
   }
 }
 
@@ -267,8 +313,20 @@ async function mediaResponse(request, store, event) {
     network = await fetch(request);
     if (network.ok || network.type === 'opaque') {
       // Do not cache a range request even if an origin ignores Range and sends 200.
-      if (!range && cache) {
-        event.waitUntil(storeMedia(cache, store, request, network));
+      if (
+        !range &&
+        cache &&
+        network.status === 200 &&
+        network.type !== 'opaque'
+      ) {
+        // Capture before queueing: foreground readers may consume the original.
+        const copy = network.clone();
+        const write = () => storeMedia(cache, store, request, copy);
+        event.waitUntil(
+          store === MEDIA_CACHES[0]
+            ? write()
+            : queueMediaMaintenance(store, write)
+        );
       }
       return network;
     }
@@ -369,11 +427,27 @@ self.addEventListener('message', event => {
       return { size };
     })();
   } else if (type === 'UPDATE_CONFIG' && payload?.cache) {
+    const maintenance = [];
     for (const key of Object.keys(MEDIA_DEFAULTS)) {
       const value = payload.cache[key];
-      if (Number.isFinite(value) && value >= 0) mediaConfig[key] = value;
+      const entryIndex = ENTRY_LIMIT_KEYS.indexOf(key);
+      if (
+        Number.isFinite(value) &&
+        value >= 0 &&
+        (entryIndex < 0 || Number.isSafeInteger(value))
+      ) {
+        mediaConfig[key] = value;
+        if (entryIndex >= 0)
+          maintenance.push(
+            queueMediaMaintenance(MEDIA_CACHES[entryIndex + 1], () =>
+              caches
+                .open(MEDIA_CACHES[entryIndex + 1])
+                .then(cache => trimEntries(cache, value))
+            )
+          );
+      }
     }
-    operation = Promise.resolve({ success: true });
+    operation = Promise.all(maintenance).then(() => ({ success: true }));
   }
   if (operation)
     event.waitUntil(

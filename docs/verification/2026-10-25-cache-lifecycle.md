@@ -1,0 +1,44 @@
+# Cache lifecycle reconciliation
+
+Owner: original PR 182 / issue 181 and ACE issue 12.
+Based on runtime/dependency successor 91bfda8; no prior submitted head changed.
+
+The root worker now enforces thumbnail/waveform/metadata limits (100/50/50 by
+default). Successful writes and explicit configuration changes expire old entries
+and evict oldest excess entries in the same owned store. Zero capacity retains
+network delivery. Negative, fractional and non-finite entry limits are ignored.
+Ordinary offline reads retain stale fallback; shell and unrelated stores are not
+part of this maintenance. No original media or native provider state is deleted.
+
+Nine regressions failed before repair: eight for the missing bounds/expiry and
+one deterministic concurrent expiry-scan/refresh race. Per-store non-audio write
+and maintenance serialization fixes the race. Network responses are cloned before
+queueing, so foreground consumption remains independent of background work.
+Audio retains its existing independent byte-bound write path.
+
+Fresh pinned Node 24.19.0 validation: all 49 production-worker unit cases passed,
+including stream delivery, historical fallback, routing, ranges, invalid/zero
+limits, cache ownership and refresh concurrency. Six native lifecycle/management
+cases passed across Chromium, Firefox and Mobile Chrome in 5.9 seconds. These
+serve the actual worker over HTTP, hold its source stream open until foreground
+bytes arrive, then observe the completed CacheStorage entry. Entry tests poll
+actual storage rather than assume a delay. Formatting and whitespace passed.
+
+Recovered PR 182's missing plan, dated verification and original offline-media
+suite. Historical prose has explicit source-head/date provenance. The native
+suite retains original media bytes, worker update/retirement, cache sentinels,
+offline ranges, decoder playback/seek, fragments, fallback and catalogue checks.
+Timing/routing expectations now observe the asynchronous audio cache commit
+and expect application images to remain network-first. The fixture closes its
+actual HTTP origin before offline checks: Firefox still reached that origin
+despite browser offline emulation (initial cross-project run: four passed,
+two Firefox navigation-fallback failures with real server 404 responses).
+After that fixture correction, all six original offline-media cases passed
+across Chromium, Firefox and Mobile Chrome in 20.4 seconds, at root and subpath
+deployment bases. These include the original recording's decoder playback and
+offline seeking with an actually unavailable HTTP origin.
+
+Independent review reproduced the refresh race, then found no remaining Important
+blockers after repair. This is source/local-browser evidence; hosted rollout,
+live CDN configuration, Safari/iPhone and artistic/device acceptance remain open.
+Original carriers remain retained pending verified default integration.
