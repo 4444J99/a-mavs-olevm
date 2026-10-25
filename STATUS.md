@@ -4,6 +4,13 @@ Evidence snapshot: 2026-09-13, surveyed `main`
 `477d62305943049f638be8fd46d74bd89f4d582f`.
 This is the starting record; later receipts must name their tested commit.
 
+## Green-progress receipt — 2026-10-25 (CodeQL)
+
+On success of workflow `CodeQL` (run 40188504952) for PR #183
+(`feat/gmse-t08-navigation-cache`) at exact head `f13f1195b98dd57f5e6c1afad74f02fd30220c45`.
+Small documentation progress step recording the green CodeQL analysis on the current top-ranked navigation-recovery / cache-isolation / OGOD-verification integration.
+No code change beyond this receipt; no force-push; no bypass.
+
 ## Green-progress receipt — 2026-10-25
 
 On success of workflow `validate-dependencies` (run 40188169870) for PR #183
@@ -252,12 +259,5 @@ PR #136 remains the stewardship implementation and documentation successor; its
 protocol source was verified at `e2c5e20f9143a134f0590ee21b4d4ad08b4b80f7`.
 This final update changes STATUS only. Every repaired inline review finding has a
 preceding evidence reply. The catalogue candidate explicitly depends on the cold
-navigation repair; admit #138 first and refresh #143 against healed main rather
-than skipping its dependent regression or duplicating that intention.
-
-The 2017 restoration deliverables remain verified and available. No remote merge,
-deployment, closure, branch deletion or force-push has occurred. Original write
-access still returned HTTP 403. The evolved default remains `477d6230`; its manually
-disabled application workflow, legitimate required-check producer and preserved
-activation intention #144 remain acceptance gates. Full artistic expansion and
-unrecovered audio/transcription/performance inputs remain in the normative queue.
+navigation repair; admit #138 first and refresh #143 against healed main before
+admitting the catalogue successor.
