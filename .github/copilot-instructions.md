@@ -1,4 +1,15 @@
-# GitHub Copilot Instructions for etceter4
+# GitHub Copilot Instructions for GMSE / ET CETER4
+
+## Repository stewardship
+
+Read [AGENTS.md](../AGENTS.md), [BRANCHES.md](../BRANCHES.md), and
+[docs/REPOSITORY_STEWARDSHIP.md](../docs/REPOSITORY_STEWARDSHIP.md) before work.
+Verify → Heal → Expand → Evolve. Inventory before mutation; preserve every living
+intention. Use one PR per intention or repeated-failure family. Record a verdict
+and proof on the current default commit before closure; link work using `Refs #N`.
+Merged implementation alone does not establish completion. No branch deletion or
+issue closure for tidiness, no automatic `develop`, and no direct protected pushes.
+Session authorization persists: execute the already authorized plan.
 
 ## Project Overview
 
@@ -9,7 +20,7 @@ This is **etceter4.com** - a creative multimedia website featuring experimental 
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
 - **CSS Framework**: Tachyons (utility-first CSS)
 - **JavaScript Libraries**: jQuery 3.7+, Velocity.js 2.0+
-- **Development Tools**: ESLint 9.x, Prettier 3.x, Browser-sync 3.x
+- **Development Tools**: ESLint, Prettier, Browser-sync; package.json and the lockfile define supported versions
 - **CI/CD**: GitHub Actions
 - **Deployment**: GitHub Pages & Vercel
 
@@ -65,9 +76,9 @@ etceter4/
 
 ### Git Workflow
 
-- **Branch Strategy**: Create feature branches from `master`
+- **Branch Strategy**: Default is `main`; read BRANCHES.md and use a short-lived branch/worktree from the appropriate lane or main
 - **Commit Messages**: Use conventional commit format (feat:, fix:, chore:, etc.)
-- **Pull Requests**: All changes require passing CI checks (lint, format, security audit)
+- **Pull Requests**: One intention/family; preserve related work; require applicable lint, format, lock, security, unit, browser, HTML, accessibility and stewardship checks at the tested head
 - **Dependencies**: Managed via Dependabot, reviewed before merging
 
 ## Development Workflow
@@ -75,7 +86,7 @@ etceter4/
 ### Getting Started
 
 ```bash
-npm install              # Install dependencies
+npm ci                   # Install the frozen dependency tree
 npm run dev             # Start development server at localhost:3000
 ```
 
@@ -86,6 +97,10 @@ npm run lint            # Check code with ESLint
 npm run format          # Format code with Prettier
 npm run format:check    # Verify formatting
 npm run validate:package-lock  # Validate package-lock.json
+npm run test:unit        # Vitest unit suite
+npm run test:unit -- tests/governance  # Stewardship metadata behavior
+npm test                # Playwright browser suite (install browsers first)
+npm run test:a11y        # Browser accessibility suite
 ```
 
 ### CI/CD Pipeline
@@ -93,48 +108,42 @@ npm run validate:package-lock  # Validate package-lock.json
 1. **Linting & Formatting** - ESLint and Prettier checks
 2. **Package Lock Validation** - Dependency integrity
 3. **Security Audit** - `npm audit` for vulnerabilities
-4. **Deploy** - Automatic deployment to GitHub Pages on main/master
+4. **Application Proof** - Vitest, Playwright, accessibility, HTML and applicable build/link checks
+5. **Stewardship** - Test metadata policy; merge events record pending verification and do not close issues
+6. **Deploy** - Existing GitHub Pages workflow targets main (and historical master trigger); verify the served edition separately
+
+A configured workflow does not prove it ran. Inspect exact-head execution and
+required-check settings. The full audit includes development tooling; a production-only
+audit must not be reported as a clean full dependency tree.
 
 ## Code Patterns to Follow
 
 ### Page Initialization
 
-```javascript
-// Pattern used in main.js
-$(document).ready(function () {
-  // Initialize components
-  // Set up event listeners
-  // Load initial data
-});
-```
+`js/main.js` uses jQuery ready and reports `etceter4Startup` as starting,
+ready or failed. Navigation configuration and loaders are validated before
+readiness; the independent fallback must remain usable after partial startup.
 
 ### Dynamic Content Loading
 
-```javascript
-// Pattern used in pageData.js
-$.getJSON('path/to/data.json', function (data) {
-  // Process and render data
-});
-```
+`Page.initPage()` delegates lazy fragment/script work to
+`ChamberLoader.ensureLoaded()`. The loader executes declared scripts through
+`ScriptLoader.loadSequence()`; preserve manifest dependencies and retry behavior.
 
 ### Navigation & Page Management
 
-```javascript
-// Pattern used in page.js
-function loadPage(pageId) {
-  // Clear current content
-  // Load new content
-  // Update state
-}
-```
+`showNewSection()` in `js/page.js` owns transitions, queued routes and history.
+Failed navigation restores the previous page and preserves the latest queued
+request. Search-bootstrap failures must not invoke unrelated navigation rollback.
 
 ## Special Sections
 
-### OGOD (Ontological God of Deities)
+### OGOD
 
-- Interactive deity/pantheon system
-- Located in `/ogod/` directory
-- Complex naming and generation logic
+- ET CETER4 visual album with 29 historical track pages
+- Located in `/ogod/` with a separate evolved 3D experience
+- Preserve historical playback behavior and distinguish new synchronization/reactivity
+- Do not invent an acronym expansion, release metadata or recovered source audio
 
 ### Akademia
 
@@ -160,14 +169,17 @@ function loadPage(pageId) {
 - Manual testing via `npm run dev`
 - Visual verification of UI changes
 - Cross-browser testing for modern browsers
-- No automated test suite currently (future enhancement)
+- Existing Vitest unit suite: `npm run test:unit`
+- Existing Playwright browser suite: `npm test`; accessibility: `npm run test:a11y`
+- Stewardship protocol: `npm run test:unit -- tests/governance`
+- Exercise actual navigation, audio activation and source assets; do not simulate a passing route by manually revealing DOM
 
 ## Common Tasks
 
 ### Adding New JavaScript
 
 1. Create file in `/js/` directory
-2. Add to ESLint config in `eslint.config.js`
+2. Add to the relevant checks using `.config/eslint.config.js` and package scripts
 3. Include script tag in HTML where needed
 4. Test with `npm run lint`
 
@@ -200,10 +212,10 @@ When providing code suggestions:
 ## Known Patterns & Quirks
 
 - **Global Variables**: Some intentional global scope usage for cross-file communication
-- **No Build Step**: This is a static site, no webpack/bundler needed
+- **Build Boundary**: The main site is static; embedded exhibits have separate build scripts and must be checked when affected
 - **Legacy Code**: Some older patterns coexist with modern code
 - **Experimental**: Site embraces experimental and artistic approaches
-- **No Framework**: Intentionally framework-free (no React, Vue, etc.)
+- **Framework Boundary**: The root application is framework-free; embedded exhibits may use React or Lit in their own package graphs
 
 ## Resources
 

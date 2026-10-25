@@ -3,7 +3,13 @@ import { test, expect } from '@playwright/test';
 
 test.use({ serviceWorkers: 'block', reducedMotion: 'no-preference' });
 
-for (const script of ['pageData.js', 'main.js']) {
+for (const script of [
+  'pageData.js',
+  'main.js',
+  'config.js',
+  'modules/ChamberLoader.js',
+  'modules/ScriptLoader.js',
+]) {
   test(`missing ${script} exposes working standalone links even when jQuery and Page loaded`, async ({
     page,
   }) => {

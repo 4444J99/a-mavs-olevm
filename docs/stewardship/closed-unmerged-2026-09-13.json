@@ -1,0 +1,1424 @@
+{
+  "repository": "organvm-ii-poiesis/a-mavs-olevm",
+  "base": "477d62305943049f638be8fd46d74bd89f4d582f",
+  "count": 42,
+  "ancestry_is_not_semantic_uniqueness": true,
+  "members": [
+    {
+      "number": 127,
+      "title": "chore(deps): bump fast-uri from 3.1.2 to 3.1.6",
+      "head": "0f1289e76d2717b4707667eaad38d4d27b039ea3",
+      "closed_at": "2026-09-03T00:07:26Z",
+      "branch": "dependabot/npm_and_yarn/fast-uri-3.1.6",
+      "ahead_by": 1,
+      "behind_by": 0,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        }
+      ]
+    },
+    {
+      "number": 121,
+      "title": "chore(deps): bump fast-uri from 3.1.2 to 3.1.5",
+      "head": "e3ccd458294931e6d46d798f69d11ab1994ddc55",
+      "closed_at": "2026-08-26T12:07:03Z",
+      "branch": "dependabot/npm_and_yarn/fast-uri-3.1.5",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        }
+      ]
+    },
+    {
+      "number": 120,
+      "title": "chore(deps): bump undici from 7.28.0 to 7.29.0",
+      "head": "ced0c7e1734633bc07ed097d2cbb06d9e430807f",
+      "closed_at": "2026-08-26T12:08:03Z",
+      "branch": "dependabot/npm_and_yarn/undici-7.29.0",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        }
+      ]
+    },
+    {
+      "number": 119,
+      "title": "chore(deps): bump postcss from 8.5.16 to 8.5.25",
+      "head": "3735365fcbc4b223154f2a72d9519b7396677265",
+      "closed_at": "2026-08-12T02:17:28Z",
+      "branch": "dependabot/npm_and_yarn/postcss-8.5.25",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 7,
+          "deletions": 7
+        }
+      ]
+    },
+    {
+      "number": 118,
+      "title": "chore(deps): bump the github-actions-deps group across 1 directory with 5 updates",
+      "head": "b9b57c68f218dba0a1469fdf5e54e1350f640e39",
+      "closed_at": "2026-08-07T04:20:07Z",
+      "branch": "dependabot/github_actions/github-actions-deps-c6b7fac220",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "files": [
+        {
+          "path": ".github/workflows/ci-cd.yml",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 10
+        },
+        {
+          "path": ".github/workflows/codeql.yml",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": ".github/workflows/release-drafter.yml",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": ".github/workflows/stale.yml",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 117,
+      "title": "chore(deps-dev): bump the npm-deps group across 5 directories with 9 updates",
+      "head": "0b228be0f345a2c8c8e09b1cc5053fd2f5dd7e5c",
+      "closed_at": "2026-08-21T04:14:40Z",
+      "branch": "dependabot/npm_and_yarn/npm-deps-35aedc4029",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "files": [
+        {
+          "path": "absorb-alchemize/audio-orb/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "absorb-alchemize/gemini-ink-studio/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "absorb-alchemize/p5js-playground/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "absorb-alchemize/synthwave-space/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 950,
+          "deletions": 1089
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 8
+        }
+      ]
+    },
+    {
+      "number": 116,
+      "title": "chore(deps): bump fast-uri from 3.1.2 to 3.1.4",
+      "head": "f180529d634d6160e912cdc1190391201573bdcd",
+      "closed_at": "2026-08-06T02:23:33Z",
+      "branch": "dependabot/npm_and_yarn/fast-uri-3.1.4",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        }
+      ]
+    },
+    {
+      "number": 115,
+      "title": "chore(deps-dev): bump the npm-deps group across 5 directories with 7 updates",
+      "head": "7ec31cfe1b3217e0e1b65409b44291d18aa97a34",
+      "closed_at": "2026-07-30T16:59:46Z",
+      "branch": "dependabot/npm_and_yarn/npm-deps-78e2ce9533",
+      "ahead_by": 1,
+      "behind_by": 6,
+      "files": [
+        {
+          "path": "absorb-alchemize/audio-orb/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "absorb-alchemize/gemini-ink-studio/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "absorb-alchemize/p5js-playground/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "absorb-alchemize/synthwave-space/package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 848,
+          "deletions": 984
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 6
+        }
+      ]
+    },
+    {
+      "number": 114,
+      "title": "chore(deps): bump the github-actions-deps group across 1 directory with 3 updates",
+      "head": "d9d9f6692f5295fa39d0c492f60946bfb4b26eb8",
+      "closed_at": "2026-07-31T04:14:02Z",
+      "branch": "dependabot/github_actions/github-actions-deps-be626d360d",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "files": [
+        {
+          "path": ".github/workflows/ci-cd.yml",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 10
+        },
+        {
+          "path": ".github/workflows/stale.yml",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 103,
+      "title": "[limen GEN-organvm-a-mavs-olevm-test-coverage-0620] Raise test coverage in organvm/a-mavs-olevm",
+      "head": "c4a2ca3dbf8b12af3d5d30e0a8748c77dc7c4070",
+      "closed_at": "2026-08-30T13:11:50Z",
+      "branch": "limen/gen-organvm-a-mavs-olevm-test-coverage-0620-4c61",
+      "ahead_by": 1,
+      "behind_by": 16,
+      "files": [
+        {
+          "path": "tests/unit/discovery/DiscoveryController.test.js",
+          "status": "added",
+          "additions": 430,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 101,
+      "title": "chore(deps): bump the npm-deps group across 5 directories with 17 updates",
+      "head": "3db4b0b2f9873ab27bf7d5162cbccb167521d0f0",
+      "closed_at": "2026-07-03T04:14:09Z",
+      "branch": "dependabot/npm_and_yarn/npm-deps-90559afded",
+      "ahead_by": 1,
+      "behind_by": 16,
+      "files": [
+        {
+          "path": "absorb-alchemize/audio-orb/package.json",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4
+        },
+        {
+          "path": "absorb-alchemize/gemini-ink-studio/package.json",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 5
+        },
+        {
+          "path": "absorb-alchemize/p5js-playground/package.json",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": "absorb-alchemize/synthwave-space/package.json",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4
+        },
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 985,
+          "deletions": 1622
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 10
+        }
+      ]
+    },
+    {
+      "number": 99,
+      "title": "chore(deps): bump the npm-deps group across 5 directories with 18 updates",
+      "head": "cffc142512d837b69bfeb319911e2a2b6867a1c8",
+      "closed_at": "2026-06-26T04:14:08Z",
+      "branch": "dependabot/npm_and_yarn/npm-deps-92e32595f7",
+      "ahead_by": 1,
+      "behind_by": 16,
+      "files": [
+        {
+          "path": "absorb-alchemize/audio-orb/package.json",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 5
+        },
+        {
+          "path": "absorb-alchemize/gemini-ink-studio/package.json",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 6
+        },
+        {
+          "path": "absorb-alchemize/p5js-playground/package.json",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4
+        },
+        {
+          "path": "absorb-alchemize/synthwave-space/package.json",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 5
+        },
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 901,
+          "deletions": 1540
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 10
+        }
+      ]
+    },
+    {
+      "number": 98,
+      "title": "chore(deps): bump form-data from 4.0.5 to 4.0.6",
+      "head": "5b7714d42f7f4ca97feaaaf2f7248645d7abd78c",
+      "closed_at": "2026-07-19T08:04:50Z",
+      "branch": "dependabot/npm_and_yarn/form-data-4.0.6",
+      "ahead_by": 1,
+      "behind_by": 16,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 8
+        }
+      ]
+    },
+    {
+      "number": 97,
+      "title": "chore(deps-dev): bump js-yaml from 4.1.1 to 4.2.0",
+      "head": "aae9e701af351cffbbc11e2073d28dbe3d580e63",
+      "closed_at": "2026-07-19T08:04:52Z",
+      "branch": "dependabot/npm_and_yarn/js-yaml-4.2.0",
+      "ahead_by": 1,
+      "behind_by": 16,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 13,
+          "deletions": 3
+        }
+      ]
+    },
+    {
+      "number": 90,
+      "title": "chore(deps): bump the npm_and_yarn group across 1 directory with 9 updates",
+      "head": "fc25427794f96f884e71a2f2df758b6261f4bed6",
+      "closed_at": "2026-05-29T11:41:58Z",
+      "branch": "dependabot/npm_and_yarn/npm_and_yarn-2ccf65ef54",
+      "ahead_by": 1,
+      "behind_by": 20,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 220,
+          "deletions": 174
+        }
+      ]
+    },
+    {
+      "number": 89,
+      "title": "chore(deps): bump the npm_and_yarn group across 1 directory with 5 updates",
+      "head": "fba9e1b4f2e1a579e56cb521f40cb02b6beb33b5",
+      "closed_at": "2026-05-09T02:17:44Z",
+      "branch": "dependabot/npm_and_yarn/npm_and_yarn-5bad5e7b07",
+      "ahead_by": 1,
+      "behind_by": 23,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 208,
+          "deletions": 162
+        }
+      ]
+    },
+    {
+      "number": 88,
+      "title": "chore(deps-dev): bump jsdom from 24.1.3 to 29.0.1",
+      "head": "bee449db6ee01f5f8b94b45c355e9b540fdb523b",
+      "closed_at": "2026-03-24T01:11:13Z",
+      "branch": "dependabot/npm_and_yarn/jsdom-29.0.1",
+      "ahead_by": 1,
+      "behind_by": 27,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 237,
+          "deletions": 554
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 87,
+      "title": "chore(deps-dev): bump html-validate from 10.7.0 to 10.11.2",
+      "head": "1780a8d435a906fe03b15d30fa8a1f2a0ccce16c",
+      "closed_at": "2026-03-24T01:12:01Z",
+      "branch": "dependabot/npm_and_yarn/html-validate-10.11.2",
+      "ahead_by": 1,
+      "behind_by": 30,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 10
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 86,
+      "title": "chore(deps-dev): bump vitest from 4.0.18 to 4.1.0",
+      "head": "c88cb23be8d6970ab096a6a1c5307056fefd31df",
+      "closed_at": "2026-03-24T01:12:03Z",
+      "branch": "dependabot/npm_and_yarn/vitest-4.1.0",
+      "ahead_by": 1,
+      "behind_by": 30,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 582,
+          "deletions": 805
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 85,
+      "title": "chore(deps-dev): bump @commitlint/cli from 20.4.1 to 20.5.0",
+      "head": "0e7657e718737b3d1057c2f0e4b603b18bf18494",
+      "closed_at": "2026-03-24T01:12:06Z",
+      "branch": "dependabot/npm_and_yarn/commitlint/cli-20.5.0",
+      "ahead_by": 1,
+      "behind_by": 30,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 202,
+          "deletions": 182
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 84,
+      "title": "chore(deps-dev): bump jsdom from 24.1.3 to 29.0.0",
+      "head": "a11211b8df6ffc9b1d5b65417b8250cc29af4958",
+      "closed_at": "2026-03-23T04:17:00Z",
+      "branch": "dependabot/npm_and_yarn/jsdom-29.0.0",
+      "ahead_by": 1,
+      "behind_by": 30,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 237,
+          "deletions": 554
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 83,
+      "title": "chore(deps-dev): bump @commitlint/config-conventional from 19.8.1 to 20.5.0",
+      "head": "8af7205352848afe2c528fd564a2942bd77cd823",
+      "closed_at": "2026-03-24T01:12:08Z",
+      "branch": "dependabot/npm_and_yarn/commitlint/config-conventional-20.5.0",
+      "ahead_by": 1,
+      "behind_by": 30,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 32,
+          "deletions": 195
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 82,
+      "title": "chore(deps-dev): bump lint-staged from 15.5.2 to 16.4.0",
+      "head": "36eafac8b5b4e6e9a0eeb10cd1a110c4763124b2",
+      "closed_at": "2026-03-24T01:12:10Z",
+      "branch": "dependabot/npm_and_yarn/lint-staged-16.4.0",
+      "ahead_by": 1,
+      "behind_by": 30,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 77,
+          "deletions": 275
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 81,
+      "title": "chore(deps-dev): bump @commitlint/cli from 20.4.1 to 20.4.3",
+      "head": "44c1b081c4ac81eebd19292aca82316dd83514a5",
+      "closed_at": "2026-03-16T04:17:12Z",
+      "branch": "dependabot/npm_and_yarn/commitlint/cli-20.4.3",
+      "ahead_by": 1,
+      "behind_by": 32,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 152,
+          "deletions": 137
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 80,
+      "title": "chore(deps-dev): bump html-validate from 10.7.0 to 10.11.1",
+      "head": "ed02e89360922341bbdf57154b02a5ba49f9878a",
+      "closed_at": "2026-03-16T04:17:32Z",
+      "branch": "dependabot/npm_and_yarn/html-validate-10.11.1",
+      "ahead_by": 1,
+      "behind_by": 32,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 10
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 79,
+      "title": "chore(deps-dev): bump @commitlint/config-conventional from 19.8.1 to 20.4.3",
+      "head": "0f042ea4f20770d4829a8f09129f4cbd828abae3",
+      "closed_at": "2026-03-16T04:17:00Z",
+      "branch": "dependabot/npm_and_yarn/commitlint/config-conventional-20.4.3",
+      "ahead_by": 1,
+      "behind_by": 32,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 32,
+          "deletions": 195
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 78,
+      "title": "chore(deps-dev): bump lint-staged from 15.5.2 to 16.3.2",
+      "head": "6f55f77be2807dfed3aa64a2595a08958f245841",
+      "closed_at": "2026-03-16T04:16:54Z",
+      "branch": "dependabot/npm_and_yarn/lint-staged-16.3.2",
+      "ahead_by": 1,
+      "behind_by": 32,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 66,
+          "deletions": 277
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 76,
+      "title": "chore(deps-dev): bump lint-staged from 15.5.2 to 16.3.1",
+      "head": "f1607af8c33ada51ba1196f56ad1e7efe352b24b",
+      "closed_at": "2026-03-09T04:19:12Z",
+      "branch": "dependabot/npm_and_yarn/lint-staged-16.3.1",
+      "ahead_by": 1,
+      "behind_by": 37,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 66,
+          "deletions": 277
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 75,
+      "title": "chore(deps-dev): bump eslint from 10.0.0 to 10.0.2",
+      "head": "f68cdd8b10bab8a78a8c3ae9cf84e69350be83eb",
+      "closed_at": "2026-03-24T01:12:24Z",
+      "branch": "dependabot/npm_and_yarn/eslint-10.0.2",
+      "ahead_by": 2,
+      "behind_by": 34,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 91,
+          "deletions": 45
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 73,
+      "title": "chore(deps-dev): bump minimatch from 3.1.2 to 3.1.5 in the npm_and_yarn group across 1 directory",
+      "head": "81ae7c548dac25c1a7c0af53481d93a90c1f32ff",
+      "closed_at": "2026-03-24T01:12:28Z",
+      "branch": "dependabot/npm_and_yarn/npm_and_yarn-bb3626eb1a",
+      "ahead_by": 1,
+      "behind_by": 38,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 87,
+          "deletions": 41
+        }
+      ]
+    },
+    {
+      "number": 72,
+      "title": "chore(deps-dev): bump html-validate from 10.7.0 to 10.9.0",
+      "head": "d414499bc3c37cb379a5d1e1484a4aa584fb5a0b",
+      "closed_at": "2026-03-09T04:19:32Z",
+      "branch": "dependabot/npm_and_yarn/html-validate-10.9.0",
+      "ahead_by": 1,
+      "behind_by": 39,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 71,
+      "title": "chore(deps-dev): bump @commitlint/cli from 20.4.1 to 20.4.2",
+      "head": "cf0976f18cf45f2c3d645d301e4521fe6ac273d4",
+      "closed_at": "2026-03-09T04:19:47Z",
+      "branch": "dependabot/npm_and_yarn/commitlint/cli-20.4.2",
+      "ahead_by": 1,
+      "behind_by": 39,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 12,
+          "deletions": 12
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 70,
+      "title": "chore(deps-dev): bump eslint from 10.0.0 to 10.0.1",
+      "head": "464078aa5899d8562d2d84df57bb4d99d1141ac4",
+      "closed_at": "2026-03-02T04:20:14Z",
+      "branch": "dependabot/npm_and_yarn/eslint-10.0.1",
+      "ahead_by": 1,
+      "behind_by": 39,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 87,
+          "deletions": 41
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 69,
+      "title": "chore(deps-dev): bump @commitlint/config-conventional from 19.8.1 to 20.4.2",
+      "head": "7964fa8b6ae210f0a0125b94ca34363909bcd15f",
+      "closed_at": "2026-03-09T04:19:19Z",
+      "branch": "dependabot/npm_and_yarn/commitlint/config-conventional-20.4.2",
+      "ahead_by": 1,
+      "behind_by": 39,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 15,
+          "deletions": 192
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 68,
+      "title": "chore(deps-dev): bump html-validate from 10.7.0 to 10.8.0",
+      "head": "57133d6a86468562fcdf24ed38122fcce8c33424",
+      "closed_at": "2026-02-23T04:26:10Z",
+      "branch": "dependabot/npm_and_yarn/html-validate-10.8.0",
+      "ahead_by": 1,
+      "behind_by": 39,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 67,
+      "title": "chore(deps-dev): bump jsdom from 24.1.3 to 28.1.0",
+      "head": "1eb69a8c9a1d034fa4c47b2826991a288fb9bc8a",
+      "closed_at": "2026-03-16T04:17:06Z",
+      "branch": "dependabot/npm_and_yarn/jsdom-28.1.0",
+      "ahead_by": 1,
+      "behind_by": 39,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 243,
+          "deletions": 463
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 65,
+      "title": "chore(deps-dev): bump lint-staged from 15.5.2 to 16.2.7",
+      "head": "0c5fcd271fd47429923e28a5b0718978ea545f41",
+      "closed_at": "2026-02-12T16:11:11Z",
+      "branch": "dependabot/npm_and_yarn/lint-staged-16.2.7",
+      "ahead_by": 1,
+      "behind_by": 55,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 63,
+          "deletions": 280
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 61,
+      "title": "chore(deps-dev): bump jsdom from 24.1.3 to 28.0.0",
+      "head": "596646deb9340979bd49b2280968b03933349ac1",
+      "closed_at": "2026-02-12T16:11:33Z",
+      "branch": "dependabot/npm_and_yarn/jsdom-28.0.0",
+      "ahead_by": 1,
+      "behind_by": 55,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 229,
+          "deletions": 463
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 59,
+      "title": "chore(deps-dev): bump @commitlint/config-conventional from 19.8.1 to 20.4.1",
+      "head": "f4d3acca5dc635b2caa8ba829d2179ff44fb63d1",
+      "closed_at": "2026-02-12T16:11:12Z",
+      "branch": "dependabot/npm_and_yarn/commitlint/config-conventional-20.4.1",
+      "ahead_by": 1,
+      "behind_by": 52,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 15,
+          "deletions": 212
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 57,
+      "title": "chore(deps-dev): bump vitest from 2.1.9 to 4.0.18",
+      "head": "277ef4989c3257970612d8e968e1711e55674af3",
+      "closed_at": "2026-02-12T16:11:13Z",
+      "branch": "dependabot/npm_and_yarn/vitest-4.0.18",
+      "ahead_by": 1,
+      "behind_by": 55,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 495,
+          "deletions": 442
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "title": "build(deps): Bump esbuild from 0.21.5 to 0.27.2 in the npm_and_yarn group across 1 directory",
+      "head": "a7bd0d209aebca706aa918cda47ac68a2159e4fb",
+      "closed_at": "2026-02-12T16:11:14Z",
+      "branch": "dependabot/npm_and_yarn/npm_and_yarn-a9e5fb3b87",
+      "ahead_by": 1,
+      "behind_by": 83,
+      "files": [
+        {
+          "path": "package-lock.json",
+          "status": "modified",
+          "additions": 392,
+          "deletions": 339
+        },
+        {
+          "path": "package.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Add GitHub Copilot and AI assistant configuration",
+      "head": "caa6348f912c38572e8ba0986f51c67ea1c4fd2a",
+      "closed_at": "2026-01-25T15:36:22Z",
+      "branch": "copilot/set-up-for-coding-agent",
+      "ahead_by": 6,
+      "behind_by": 134,
+      "files": [
+        {
+          "path": ".editorconfig",
+          "status": "added",
+          "additions": 56,
+          "deletions": 0
+        },
+        {
+          "path": ".github/AI_ASSISTANT_GUIDE.md",
+          "status": "added",
+          "additions": 330,
+          "deletions": 0
+        },
+        {
+          "path": ".github/CODEOWNERS",
+          "status": "added",
+          "additions": 44,
+          "deletions": 0
+        },
+        {
+          "path": ".github/TASKS.md",
+          "status": "added",
+          "additions": 481,
+          "deletions": 0
+        },
+        {
+          "path": ".github/copilot-instructions.md",
+          "status": "added",
+          "additions": 217,
+          "deletions": 0
+        },
+        {
+          "path": ".gitignore",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 1
+        },
+        {
+          "path": ".vscode/extensions.json",
+          "status": "added",
+          "additions": 39,
+          "deletions": 0
+        },
+        {
+          "path": ".vscode/settings.json",
+          "status": "modified",
+          "additions": 88,
+          "deletions": 1
+        },
+        {
+          "path": "ACTIVATION_COMPLETE.md",
+          "status": "modified",
+          "additions": 38,
+          "deletions": 10
+        },
+        {
+          "path": "AUDIT_SUMMARY.md",
+          "status": "modified",
+          "additions": 11,
+          "deletions": 1
+        },
+        {
+          "path": "BEGINNER_TUTORIAL.md",
+          "status": "modified",
+          "additions": 103,
+          "deletions": 17
+        },
+        {
+          "path": "CONTRIBUTING.md",
+          "status": "added",
+          "additions": 397,
+          "deletions": 0
+        },
+        {
+          "path": "EDGE_CASES.md",
+          "status": "modified",
+          "additions": 81,
+          "deletions": 24
+        },
+        {
+          "path": "LIVE_PREVIEW_GUIDE.md",
+          "status": "modified",
+          "additions": 26,
+          "deletions": 2
+        },
+        {
+          "path": "LIVING_PANTHEON_GENERATIVE.md",
+          "status": "modified",
+          "additions": 290,
+          "deletions": 147
+        },
+        {
+          "path": "MACRO_REVIEW_SUMMARY.md",
+          "status": "modified",
+          "additions": 106,
+          "deletions": 18
+        },
+        {
+          "path": "MEDIA_INFRASTRUCTURE_GUIDE.md",
+          "status": "modified",
+          "additions": 141,
+          "deletions": 66
+        },
+        {
+          "path": "NAMING_SYSTEM.md",
+          "status": "modified",
+          "additions": 23,
+          "deletions": 7
+        },
+        {
+          "path": "PANTHEON_ARCHITECTURE.md",
+          "status": "modified",
+          "additions": 145,
+          "deletions": 35
+        },
+        {
+          "path": "PANTHEON_EXPANSION_SUMMARY.md",
+          "status": "modified",
+          "additions": 45,
+          "deletions": 3
+        },
+        {
+          "path": "PROFESSIONAL_PANTHEON_CV.md",
+          "status": "modified",
+          "additions": 307,
+          "deletions": 263
+        },
+        {
+          "path": "QUICK_START.md",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 2
+        },
+        {
+          "path": "README.md",
+          "status": "modified",
+          "additions": 40,
+          "deletions": 32
+        },
+        {
+          "path": "SECURITY.md",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 2
+        },
+        {
+          "path": "SESSION_SUMMARY_2025-11-03.md",
+          "status": "modified",
+          "additions": 48,
+          "deletions": 1
+        },
+        {
+          "path": "SETUP_CHECKLIST.md",
+          "status": "modified",
+          "additions": 11,
+          "deletions": 3
+        },
+        {
+          "path": "TRANSFORMATION_PLAN.md",
+          "status": "modified",
+          "additions": 110,
+          "deletions": 9
+        },
+        {
+          "path": "VERCEL_DEPLOYMENT.md",
+          "status": "modified",
+          "additions": 26,
+          "deletions": 0
+        },
+        {
+          "path": "akademia/README.md",
+          "status": "modified",
+          "additions": 71,
+          "deletions": 38
+        },
+        {
+          "path": "akademia/cv/cv.css",
+          "status": "modified",
+          "additions": 12,
+          "deletions": 11
+        },
+        {
+          "path": "akademia/cv/cv.js",
+          "status": "modified",
+          "additions": 36,
+          "deletions": 18
+        },
+        {
+          "path": "akademia/cv/index.html",
+          "status": "modified",
+          "additions": 393,
+          "deletions": 391
+        },
+        {
+          "path": "akademia/essays/config.js",
+          "status": "modified",
+          "additions": 72,
+          "deletions": 68
+        },
+        {
+          "path": "akademia/index.html",
+          "status": "modified",
+          "additions": 191,
+          "deletions": 209
+        },
+        {
+          "path": "analog.html",
+          "status": "modified",
+          "additions": 133,
+          "deletions": 145
+        },
+        {
+          "path": "audio/README.md",
+          "status": "modified",
+          "additions": 19,
+          "deletions": 4
+        },
+        {
+          "path": "audio/albums/config.js",
+          "status": "modified",
+          "additions": 99,
+          "deletions": 98
+        },
+        {
+          "path": "css/audioPlayer.css",
+          "status": "modified",
+          "additions": 161,
+          "deletions": 160
+        },
+        {
+          "path": "css/normalize.css",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 8
+        },
+        {
+          "path": "css/styles.css",
+          "status": "modified",
+          "additions": 630,
+          "deletions": 325
+        },
+        {
+          "path": "css/styles_old.css",
+          "status": "modified",
+          "additions": 1114,
+          "deletions": 1129
+        },
+        {
+          "path": "css/videoPlayer.css",
+          "status": "modified",
+          "additions": 145,
+          "deletions": 144
+        },
+        {
+          "path": "docs/README.md",
+          "status": "modified",
+          "additions": 7,
+          "deletions": 1
+        },
+        {
+          "path": "docs/VISUAL_GUIDES.md",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": "eslint.config.js",
+          "status": "modified",
+          "additions": 18,
+          "deletions": 10
+        },
+        {
+          "path": "img/photos/random/stills.html",
+          "status": "modified",
+          "additions": 19,
+          "deletions": 28
+        },
+        {
+          "path": "index.html",
+          "status": "modified",
+          "additions": 603,
+          "deletions": 419
+        },
+        {
+          "path": "js/analytics.js",
+          "status": "modified",
+          "additions": 20,
+          "deletions": 8
+        },
+        {
+          "path": "js/audioPlayer.js",
+          "status": "modified",
+          "additions": 204,
+          "deletions": 200
+        },
+        {
+          "path": "js/diary.js",
+          "status": "modified",
+          "additions": 373,
+          "deletions": 310
+        },
+        {
+          "path": "js/images.js",
+          "status": "modified",
+          "additions": 304,
+          "deletions": 250
+        },
+        {
+          "path": "js/legacy.js",
+          "status": "modified",
+          "additions": 29,
+          "deletions": 31
+        },
+        {
+          "path": "js/loophole.js",
+          "status": "modified",
+          "additions": 19,
+          "deletions": 23
+        },
+        {
+          "path": "js/main.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/nameSearch.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/namingAPI.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/namingStrategies.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/ogod.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/page.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/pageData.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/sketch.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/sketches/failed_attempts.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/sketches/gravity_ball.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/sketches/line_friction.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/test/namingTests.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/test/tests.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "js/videoPlayer.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "naming-demo.html",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "video/README.md",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "video/config.js",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        }
+      ]
+    }
+  ]
+}

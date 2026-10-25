@@ -13,6 +13,8 @@ function runtime({
   hash = '',
   missingData = false,
   missingJQuery = false,
+  missingDependency = null,
+  searchLoad = () => Promise.resolve(),
   initialize = () => Promise.resolve(),
 } = {}) {
   const doc = document.implementation.createHTMLDocument('Startup');
@@ -72,6 +74,9 @@ function runtime({
       'showNewSection',
       'console',
       'CustomEvent',
+      'ETCETER4_CONFIG',
+      'ChamberLoader',
+      'ScriptLoader',
       `let currentPage = null;
      function recoverNavigation(error, previous, target) {
        currentPage = previous;
@@ -90,7 +95,27 @@ function runtime({
       recover,
       vi.fn(),
       log,
-      CustomEvent
+      CustomEvent,
+      missingDependency === 'config'
+        ? undefined
+        : {
+            animations: {
+              fadeInDuration: 300,
+              fadeOutDuration: 300,
+              fadeOutDelay: 0,
+              transitionCooldown: 50,
+            },
+          },
+      missingDependency === 'chamberLoader'
+        ? undefined
+        : {
+            getInstance: () => ({ ensureLoaded: searchLoad }),
+          },
+      missingDependency === 'scriptLoader'
+        ? undefined
+        : {
+            loadSequence: vi.fn(),
+          }
     );
   return {
     doc,
@@ -114,6 +139,52 @@ async function settle() {
 afterEach(() => vi.useRealTimers());
 
 describe('production startup contract', () => {
+  it.each(['config', 'chamberLoader', 'scriptLoader'])(
+    'exposes recovery when the core %s dependency is missing',
+    async missingDependency => {
+      const app = runtime({ missingDependency });
+      app.startMain();
+      app.domReady();
+      app.runReady();
+      await settle();
+      expect(app.win.etceter4Startup.status).toBe('failed');
+      expect(app.panel()).not.toBeNull();
+      expect(app.pantheon).not.toHaveBeenCalled();
+    }
+  );
+
+  it('reports search failure without rolling back an in-flight chamber transition', async () => {
+    let release;
+    const app = runtime({
+      hash: '#bibliotheke',
+      initialize: () =>
+        new Promise(resolve => {
+          release = resolve;
+        }),
+      searchLoad: () => Promise.reject(new Error('Discovery unavailable')),
+    });
+    const current = app.startMain();
+    app.runReady();
+    await settle();
+    const before = current();
+    app.doc.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'k', ctrlKey: true })
+    );
+    await settle();
+    expect(app.recover).not.toHaveBeenCalled();
+    expect(current()).toBe(before);
+    expect(app.win.etceter4Startup.status).toBe('starting');
+    expect(app.doc.getElementById('search-error')?.getAttribute('role')).toBe(
+      'alert'
+    );
+    release();
+    await settle();
+    expect(app.win.etceter4Startup).toEqual({
+      status: 'ready',
+      route: '#bibliotheke',
+    });
+  });
+
   it('shows recovery when main.js never executes even though jQuery and Page loaded', () => {
     const app = runtime();
     expect(typeof app.win.jQuery).toBe('function');

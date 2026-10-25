@@ -304,6 +304,7 @@ describe('DiscoveryController', () => {
 
   it('should initialize subsystem dependencies once and cache status', async () => {
     const instance = DiscoveryController.getInstance();
+    const keydownSpy = vi.spyOn(document, 'addEventListener');
 
     await instance.initialize();
 
@@ -311,6 +312,18 @@ describe('DiscoveryController', () => {
     expect(mocks.searchEngine.initialize).toHaveBeenCalledTimes(1);
     expect(mocks.filterSystem.initialize).toHaveBeenCalledTimes(1);
     expect(mocks.relatedWorks.initialize).toHaveBeenCalledTimes(1);
+    expect(instance.elements).toMatchObject({
+      searchInput: document.getElementById('discoverySearchInput'),
+      resultsGrid: document.getElementById('resultsGrid'),
+      tagCloud: document.getElementById('tagCloud'),
+      quickFilters: document.getElementById('quickFilters'),
+      globalSearchInput: document.getElementById('globalSearchInput'),
+      globalSearchResults: document.getElementById('globalSearchResults'),
+    });
+    expect(mocks.filterSystem.onChange).toHaveBeenCalledWith(
+      instance._onFilterChange
+    );
+    expect(keydownSpy).toHaveBeenCalledWith('keydown', instance._onKeyDown);
     expect(instance.isInitialized).toBe(true);
     expect(instance.getStatus()).toMatchObject({
       isInitialized: true,
@@ -397,6 +410,7 @@ describe('DiscoveryController', () => {
     expect(instance.isSearchModalOpen).toBe(true);
     expect(instance.elements.searchModal.classList.contains('db')).toBe(true);
     expect(instance.elements.searchModal.classList.contains('dn')).toBe(false);
+    expect(document.activeElement).toBe(instance.elements.globalSearchInput);
 
     instance.closeSearchModal();
 
@@ -434,6 +448,7 @@ describe('DiscoveryController', () => {
     const instance = DiscoveryController.getInstance();
     await instance.initialize();
 
+    expect(instance._getPaginationRange(2, 3, 5)).toEqual([1, 2, 3]);
     expect(instance._getPaginationRange(1, 10, 5)).toEqual([
       1,
       2,
@@ -492,6 +507,11 @@ describe('DiscoveryController', () => {
       },
     ]);
     expect(mocks.searchEngine.searchDebounced).toHaveBeenCalledWith('search');
+    expect(instance.elements.resultCount.textContent).toBe('1 items');
+    expect(
+      instance.elements.resultsGrid.querySelector('.result-card')?.dataset
+        .itemId
+    ).toBe('search-1');
   });
 
   it('should render global search results and handle result selection', async () => {
@@ -602,6 +622,28 @@ describe('DiscoveryController', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
+  it('uses Enter to navigate the second selected search result', async () => {
+    const instance = DiscoveryController.getInstance();
+    await instance.initialize();
+    instance.openSearchModal();
+    instance._renderGlobalSearchResults([
+      { item: { id: 'first', title: 'First' } },
+      { item: { id: 'second', title: 'Second' } },
+    ]);
+    document.querySelectorAll('.search-result-item').forEach(element => {
+      element.scrollIntoView = vi.fn();
+    });
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    expect(instance.selectedResultIndex).toBe(1);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+    expect(mocks.showNewSection).toHaveBeenCalledWith('#akademia');
+    expect(sessionStorage.getItem('etceter4-highlight-item')).toBe('second');
+    expect(instance.isSearchModalOpen).toBe(false);
+  });
+
   it('navigates a shared URL item after initialization with its stable chamber id', async () => {
     vi.useFakeTimers();
     mocks.shareLinks.getItemIdFromUrl.mockReturnValue('album-1');
@@ -693,7 +735,9 @@ describe('DiscoveryController', () => {
       await vi.advanceTimersByTimeAsync(500);
 
       expect(mocks.showNewSection).toHaveBeenCalledWith('#bibliotheke');
-      expect(sessionStorage.getItem('etceter4-highlight-item')).toBe('diary-42');
+      expect(sessionStorage.getItem('etceter4-highlight-item')).toBe(
+        'diary-42'
+      );
       expect(instance.isSearchModalOpen).toBe(false);
     });
 

@@ -80,6 +80,39 @@ async function settle() {
 }
 
 describe('production navigation runtime', () => {
+  it('awaits the actual discovery page initializer and retries its rejection', async () => {
+    const { Page } = runtime();
+    let reject;
+    const initialize = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve, fail) => {
+            reject = fail;
+          })
+      )
+      .mockResolvedValueOnce();
+    const data = readFileSync(
+      resolve(__dirname, '../../js/pageData.js'),
+      'utf8'
+    );
+    const page = new Function(
+      'Page',
+      'DiscoveryController',
+      'jQuery',
+      `${data}\nreturn pages.find(page => page.id === '#discovery');`
+    )(Page, { initialize }, {});
+    const first = page.initPage();
+    await settle();
+    expect(page.isInitialized).toBe(false);
+    reject(new Error('metadata unavailable'));
+    await expect(first).rejects.toThrow('metadata unavailable');
+    expect(page.isInitialized).toBe(false);
+    await page.initPage();
+    expect(initialize).toHaveBeenCalledTimes(2);
+    expect(page.isInitialized).toBe(true);
+  });
+
   it('shares concurrent initialization and awaits the asynchronous initializer', async () => {
     let release;
     const initialize = vi.fn(

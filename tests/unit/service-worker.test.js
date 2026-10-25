@@ -4,7 +4,9 @@ import { resolve } from 'node:path';
 import { URL, fileURLToPath, URL as NodeURL } from 'node:url';
 import { describe, it, expect, vi } from 'vitest';
 
-const projectRoot = resolve(fileURLToPath(new NodeURL('../../', import.meta.url)));
+const projectRoot = resolve(
+  fileURLToPath(new NodeURL('../../', import.meta.url))
+);
 
 const origin = 'https://app.example';
 const shell = 'etceter4-v5';
@@ -71,7 +73,7 @@ function worker(path = 'sw.js', { base = '', stores = new Map() } = {}) {
     caches: cacheStorage,
     fetch,
     self,
-    async emit(type, data = {}) {
+    dispatch(type, data = {}) {
       const pending = [];
       let response;
       listeners[type]?.({
@@ -81,8 +83,15 @@ function worker(path = 'sw.js', { base = '', stores = new Map() } = {}) {
           response = promise;
         },
       });
-      const result = await response;
-      await Promise.all(pending);
+      return {
+        response: Promise.resolve(response),
+        finish: () => Promise.all(pending),
+      };
+    },
+    async emit(type, data = {}) {
+      const event = this.dispatch(type, data);
+      const result = await event.response;
+      await event.finish();
       return result;
     },
     async seed(name, path, body, metadata) {
@@ -100,6 +109,414 @@ const request = (path, options) => new Request(new URL(path, origin), options);
 const offline = w => w.fetch.mockRejectedValue(new TypeError('offline'));
 
 describe('root service worker', () => {
+  it('preserves same-URL write order when the newer response body finishes first', async () => {
+    const w = worker();
+    const path = '/media/metadata/reordered.json';
+    let closeOlder;
+    const older = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('older'));
+          closeOlder = () => controller.close();
+        },
+      })
+    );
+    const newer = new Response('newer');
+    let drained;
+    const newerDrained = new Promise(resolve => {
+      drained = resolve;
+    });
+    const clone = newer.clone.bind(newer);
+    vi.spyOn(newer, 'clone').mockImplementation(() => {
+      const copy = clone();
+      const getReader = copy.body.getReader.bind(copy.body);
+      vi.spyOn(copy.body, 'getReader').mockImplementation(() => {
+        const reader = getReader();
+        const read = reader.read.bind(reader);
+        vi.spyOn(reader, 'read').mockImplementation(async () => {
+          const chunk = await read();
+          if (chunk.done) drained();
+          return chunk;
+        });
+        return reader;
+      });
+      return copy;
+    });
+    w.fetch.mockResolvedValueOnce(older).mockResolvedValueOnce(newer);
+    const first = w.dispatch('fetch', { request: request(path) });
+    const firstBody = (await first.response).text();
+    const second = w.dispatch('fetch', { request: request(path) });
+    try {
+      expect(await (await second.response).text()).toBe('newer');
+      await newerDrained;
+    } finally {
+      closeOlder();
+    }
+    expect(await firstBody).toBe('older');
+    await Promise.all([first.finish(), second.finish()]);
+    expect(
+      await (await (await w.caches.open(media[3])).match(path)).text()
+    ).toBe('newer');
+  });
+
+  it('bounds pending writes before cloning while foreground responses remain usable', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxPendingMediaWrites: 1 } },
+      },
+    });
+    let entered;
+    let release;
+    const blocked = new Promise(resolve => {
+      release = resolve;
+    });
+    const writing = new Promise(resolve => {
+      entered = resolve;
+    });
+    const open = w.caches.open;
+    w.caches.open = async name => {
+      const cache = await open(name);
+      return {
+        ...cache,
+        put: async (request, response) => {
+          entered();
+          await blocked;
+          return cache.put(request, response);
+        },
+      };
+    };
+    const responses = [];
+    w.fetch.mockImplementation(async () => {
+      const response = new Response('network');
+      vi.spyOn(response, 'clone');
+      responses.push(response);
+      return response;
+    });
+    const first = w.dispatch('fetch', {
+      request: request('/media/metadata/first.json'),
+    });
+    await writing;
+    const second = w.dispatch('fetch', {
+      request: request('/media/metadata/second.json'),
+    });
+    try {
+      expect(await (await second.response).text()).toBe('network');
+      expect(responses[1].clone).not.toHaveBeenCalled();
+    } finally {
+      release();
+      await first.response;
+      await first.finish();
+      await second.finish();
+    }
+    expect(
+      await (await open(media[3])).match('/media/metadata/second.json')
+    ).toBeUndefined();
+  });
+
+  it('bounds unknown response bytes and releases the capacity after an oversized copy', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxPendingMediaBytes: 4 } },
+      },
+    });
+    w.fetch.mockResolvedValueOnce(new Response('12345'));
+    expect(
+      await (
+        await w.emit('fetch', {
+          request: request('/media/metadata/large.json'),
+        })
+      ).text()
+    ).toBe('12345');
+    const cache = await w.caches.open(media[3]);
+    expect(await cache.match('/media/metadata/large.json')).toBeUndefined();
+    w.fetch.mockResolvedValueOnce(new Response('ok'));
+    expect(
+      await (
+        await w.emit('fetch', {
+          request: request('/media/metadata/small.json'),
+        })
+      ).text()
+    ).toBe('ok');
+    expect(await (await cache.match('/media/metadata/small.json')).text()).toBe(
+      'ok'
+    );
+  });
+
+  it('rejects an oversized declared body before cloning it', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxPendingMediaBytes: 4 } },
+      },
+    });
+    const response = new Response('12345', {
+      headers: { 'Content-Length': '5' },
+    });
+    const clone = vi.spyOn(response, 'clone');
+    w.fetch.mockResolvedValueOnce(response);
+    expect(
+      await (
+        await w.emit('fetch', {
+          request: request('/media/metadata/large.json'),
+        })
+      ).text()
+    ).toBe('12345');
+    expect(clone).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['/js/living-pantheon/data/fragments.json', 3],
+    ['/img/interface.png', 1],
+    ['/js/data/waveform-settings.json', 2],
+  ])(
+    'retains formerly media-cached application asset %s offline',
+    async (path, index) => {
+      const w = worker();
+      await w.seed(media[index], path, 'historical application content');
+      offline(w);
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('historical application content');
+    }
+  );
+
+  it('does not recover an application asset from an unrelated store', async () => {
+    const w = worker();
+    await w.seed('another-app', '/img/interface.png', 'unrelated');
+    offline(w);
+    expect(
+      (await w.emit('fetch', { request: request('/img/interface.png') })).status
+    ).toBe(503);
+  });
+
+  it('prefers the current application copy over a historical media copy offline', async () => {
+    const w = worker();
+    const path = '/js/living-pantheon/data/fragments.json';
+    await w.seed(media[3], path, 'historical');
+    await w.seed(shell, path, 'current');
+    offline(w);
+    expect(
+      await (await w.emit('fetch', { request: request(path) })).text()
+    ).toBe('current');
+  });
+
+  it('serializes an expiry scan with a foreground refresh of the same entry', async () => {
+    const w = worker();
+    const path = '/media/covers/race.png';
+    await w.seed(media[1], path, 'expired', { timestamp: 0, ttl: 1 });
+    let release;
+    let observed;
+    const held = new Promise(resolve => {
+      release = resolve;
+    });
+    const scanning = new Promise(resolve => {
+      observed = resolve;
+    });
+    const open = w.caches.open;
+    let holdOnce = true;
+    w.caches.open = async name => {
+      const cache = await open(name);
+      return {
+        ...cache,
+        match: async request => {
+          const response = await cache.match(request);
+          if (name === media[1] && holdOnce) {
+            holdOnce = false;
+            observed();
+            await held;
+          }
+          return response;
+        },
+      };
+    };
+    const updating = w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxThumbnailEntries: 1 } },
+      },
+    });
+    await scanning;
+    const fetching = w.dispatch('fetch', { request: request(path) });
+    expect(await (await fetching.response).text()).toBe('network');
+    release();
+    await updating;
+    await fetching.finish();
+    expect(await (await (await open(media[1])).match(path)).text()).toBe(
+      'network'
+    );
+  });
+
+  it.each([
+    [1, 'maxThumbnailEntries', '/media/covers/', '.png'],
+    [2, 'maxWaveformEntries', '/media/waveforms/', '.json'],
+    [3, 'maxMetadataEntries', '/media/metadata/', '.json'],
+  ])(
+    'expires and bounds owned media store %s on configuration and writes',
+    async (index, key, base, extension) => {
+      const w = worker();
+      const old = base + 'old' + extension;
+      const stale = base + 'expired' + extension;
+      const fresh = base + 'new' + extension;
+      await w.seed(media[index], old, 'old', {
+        timestamp: Date.now() - 5000,
+        ttl: 100000,
+      });
+      await w.seed(media[index], stale, 'expired', { timestamp: 0, ttl: 1 });
+      await w.seed(shell, '/sentinel', 'shell');
+      await w.seed('another-app', '/sentinel', 'unrelated');
+      await w.emit('message', {
+        data: { type: 'UPDATE_CONFIG', payload: { cache: { [key]: 1 } } },
+      });
+      const cache = await w.caches.open(media[index]);
+      expect(await cache.match(stale)).toBeUndefined();
+      expect(await cache.match(old)).toBeDefined();
+      expect(
+        await (await w.emit('fetch', { request: request(fresh) })).text()
+      ).toBe('network');
+      expect(await cache.match(old)).toBeUndefined();
+      expect((await cache.keys()).map(x => x.url)).toEqual([origin + fresh]);
+      expect(
+        await (await (await w.caches.open(shell)).match('/sentinel')).text()
+      ).toBe('shell');
+      expect(
+        await (
+          await (await w.caches.open('another-app')).match('/sentinel')
+        ).text()
+      ).toBe('unrelated');
+    }
+  );
+
+  it('zero non-audio capacity preserves delivery without retaining entries', async () => {
+    const w = worker();
+    await w.emit('message', {
+      data: {
+        type: 'UPDATE_CONFIG',
+        payload: { cache: { maxThumbnailEntries: 0 } },
+      },
+    });
+    expect(
+      await (
+        await w.emit('fetch', { request: request('/media/covers/new.png') })
+      ).text()
+    ).toBe('network');
+    expect(await (await w.caches.open(media[1])).keys()).toEqual([]);
+  });
+
+  it.each([-1, 0.5, NaN, Infinity])(
+    'ignores invalid entry capacity %s',
+    async invalid => {
+      const w = worker();
+      for (const value of [1, invalid]) {
+        await w.emit('message', {
+          data: {
+            type: 'UPDATE_CONFIG',
+            payload: { cache: { maxMetadataEntries: value } },
+          },
+        });
+      }
+      await w.emit('fetch', { request: request('/media/metadata/first.json') });
+      await w.emit('fetch', {
+        request: request('/media/metadata/second.json'),
+      });
+      expect(
+        (await (await w.caches.open(media[3])).keys()).map(x => x.url)
+      ).toEqual([origin + '/media/metadata/second.json']);
+    }
+  );
+
+  it('uses the resolver absolute local media root under a site subpath', async () => {
+    const w = worker('sw.js', { base: '/a-mavs-olevm' });
+    await w.seed(media[1], '/media/covers/local.jpg', 'cached local');
+    offline(w);
+    expect(
+      await (
+        await w.emit('fetch', { request: request('/media/covers/local.jpg') })
+      ).text()
+    ).toBe('cached local');
+  });
+  it.each(['/song.mp3', '/js/main.js'])(
+    'delivers the first network bytes of %s before the stream and cache write finish',
+    async path => {
+      const w = worker();
+      let stream;
+      const body = new ReadableStream({
+        start(controller) {
+          stream = controller;
+        },
+      });
+      w.fetch.mockResolvedValue(new Response(body));
+      const open = w.caches.open;
+      w.caches.open = async name => ({
+        ...(await open(name)),
+        put: async (_request, response) => {
+          await response.arrayBuffer();
+        },
+      });
+      stream.enqueue(new TextEncoder().encode('first'));
+      const event = w.dispatch('fetch', { request: request(path) });
+      try {
+        const response = await Promise.race([
+          event.response,
+          new Promise(resolve => setTimeout(() => resolve('blocked'), 50)),
+        ]);
+        expect(response).not.toBe('blocked');
+        const first = await response.body.getReader().read();
+        expect(new TextDecoder().decode(first.value)).toBe('first');
+      } finally {
+        stream.close();
+        await event.response;
+        await event.finish();
+      }
+    }
+  );
+
+  it.each(['/media/covers/old.jpg', '/media/metadata/old.json'])(
+    'preserves the owned shell-cache fallback for %s',
+    async path => {
+      const w = worker();
+      await w.seed(shell, path, 'historical');
+      offline(w);
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('historical');
+    }
+  );
+
+  it.each(['/js/living-pantheon/data/fragments.json', '/img/interface.png'])(
+    'keeps application resource %s network-first across media cache TTLs',
+    async path => {
+      const w = worker();
+      await w.seed(media[path.endsWith('.json') ? 3 : 1], path, 'obsolete', {
+        timestamp: Date.now(),
+        ttl: 604800000,
+      });
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('network');
+      expect(w.fetch).toHaveBeenCalled();
+      expect(
+        await (await (await w.caches.open(shell)).match(path)).text()
+      ).toBe('network');
+    }
+  );
+
+  it.each(['/media/covers/old.jpg', '/media/metadata/old.json'])(
+    'refreshes historical shell media online at %s',
+    async path => {
+      const w = worker();
+      await w.seed(shell, path, 'historical');
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('network');
+      expect(w.fetch).toHaveBeenCalled();
+    }
+  );
+
   it.each(['', '/a-mavs-olevm'])(
     'preserves both current families and unrelated data at %s',
     async base => {
@@ -147,9 +564,9 @@ describe('root service worker', () => {
   });
 
   it.each([
-    ['/cover.png', 1],
-    ['/song-waveform.json', 2],
-    ['/album.json', 3],
+    ['/media/covers/cover.png', 1],
+    ['/media/waveforms/song-waveform.json', 2],
+    ['/media/metadata/album.json', 3],
   ])('uses fresh cache first for %s', async (path, index) => {
     const w = worker();
     await w.seed(media[index], path, 'cached', {
@@ -164,7 +581,7 @@ describe('root service worker', () => {
 
   it('refreshes expired thumbnails, retaining stale data offline', async () => {
     const w = worker();
-    const path = '/cover.webp';
+    const path = '/media/covers/cover.webp';
     await w.seed(media[1], path, 'stale', { timestamp: 0, ttl: 1 });
     expect(
       await (await w.emit('fetch', { request: request(path) })).text()
@@ -225,9 +642,14 @@ describe('root service worker', () => {
 
   it('zero thumbnail TTL expires immediately rather than caching forever', async () => {
     const w = worker();
-    await w.seed(media[1], '/cover.png', 'expired', { timestamp: 0, ttl: 0 });
+    await w.seed(media[1], '/media/covers/cover.png', 'expired', {
+      timestamp: 0,
+      ttl: 0,
+    });
     expect(
-      await (await w.emit('fetch', { request: request('/cover.png') })).text()
+      await (
+        await w.emit('fetch', { request: request('/media/covers/cover.png') })
+      ).text()
     ).toBe('network');
   });
 
