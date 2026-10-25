@@ -4,7 +4,9 @@ import { resolve } from 'node:path';
 import { URL, fileURLToPath, URL as NodeURL } from 'node:url';
 import { describe, it, expect, vi } from 'vitest';
 
-const projectRoot = resolve(fileURLToPath(new NodeURL('../../', import.meta.url)));
+const projectRoot = resolve(
+  fileURLToPath(new NodeURL('../../', import.meta.url))
+);
 
 const origin = 'https://app.example';
 const shell = 'etceter4-v5';
@@ -71,7 +73,7 @@ function worker(path = 'sw.js', { base = '', stores = new Map() } = {}) {
     caches: cacheStorage,
     fetch,
     self,
-    async emit(type, data = {}) {
+    dispatch(type, data = {}) {
       const pending = [];
       let response;
       listeners[type]?.({
@@ -81,8 +83,15 @@ function worker(path = 'sw.js', { base = '', stores = new Map() } = {}) {
           response = promise;
         },
       });
-      const result = await response;
-      await Promise.all(pending);
+      return {
+        response: Promise.resolve(response),
+        finish: () => Promise.all(pending),
+      };
+    },
+    async emit(type, data = {}) {
+      const event = this.dispatch(type, data);
+      const result = await event.response;
+      await event.finish();
       return result;
     },
     async seed(name, path, body, metadata) {
@@ -100,6 +109,94 @@ const request = (path, options) => new Request(new URL(path, origin), options);
 const offline = w => w.fetch.mockRejectedValue(new TypeError('offline'));
 
 describe('root service worker', () => {
+  it('uses the resolver absolute local media root under a site subpath', async () => {
+    const w = worker('sw.js', { base: '/a-mavs-olevm' });
+    await w.seed(media[1], '/media/covers/local.jpg', 'cached local');
+    offline(w);
+    expect(
+      await (
+        await w.emit('fetch', { request: request('/media/covers/local.jpg') })
+      ).text()
+    ).toBe('cached local');
+  });
+  it.each(['/song.mp3', '/js/main.js'])(
+    'delivers the first network bytes of %s before the stream and cache write finish',
+    async path => {
+      const w = worker();
+      let stream;
+      const body = new ReadableStream({
+        start(controller) {
+          stream = controller;
+        },
+      });
+      w.fetch.mockResolvedValue(new Response(body));
+      const open = w.caches.open;
+      w.caches.open = async name => ({
+        ...(await open(name)),
+        put: async (_request, response) => {
+          await response.arrayBuffer();
+        },
+      });
+      stream.enqueue(new TextEncoder().encode('first'));
+      const event = w.dispatch('fetch', { request: request(path) });
+      try {
+        const response = await Promise.race([
+          event.response,
+          new Promise(resolve => setTimeout(() => resolve('blocked'), 50)),
+        ]);
+        expect(response).not.toBe('blocked');
+        const first = await response.body.getReader().read();
+        expect(new TextDecoder().decode(first.value)).toBe('first');
+      } finally {
+        stream.close();
+        await event.response;
+        await event.finish();
+      }
+    }
+  );
+
+  it.each(['/media/covers/old.jpg', '/media/metadata/old.json'])(
+    'preserves the owned shell-cache fallback for %s',
+    async path => {
+      const w = worker();
+      await w.seed(shell, path, 'historical');
+      offline(w);
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('historical');
+    }
+  );
+
+  it.each(['/js/living-pantheon/data/fragments.json', '/img/interface.png'])(
+    'keeps application resource %s network-first across media cache TTLs',
+    async path => {
+      const w = worker();
+      await w.seed(media[path.endsWith('.json') ? 3 : 1], path, 'obsolete', {
+        timestamp: Date.now(),
+        ttl: 604800000,
+      });
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('network');
+      expect(w.fetch).toHaveBeenCalled();
+      expect(
+        await (await (await w.caches.open(shell)).match(path)).text()
+      ).toBe('network');
+    }
+  );
+
+  it.each(['/media/covers/old.jpg', '/media/metadata/old.json'])(
+    'refreshes historical shell media online at %s',
+    async path => {
+      const w = worker();
+      await w.seed(shell, path, 'historical');
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('network');
+      expect(w.fetch).toHaveBeenCalled();
+    }
+  );
+
   it.each(['', '/a-mavs-olevm'])(
     'preserves both current families and unrelated data at %s',
     async base => {
@@ -147,9 +244,9 @@ describe('root service worker', () => {
   });
 
   it.each([
-    ['/cover.png', 1],
-    ['/song-waveform.json', 2],
-    ['/album.json', 3],
+    ['/media/covers/cover.png', 1],
+    ['/media/waveforms/song-waveform.json', 2],
+    ['/media/metadata/album.json', 3],
   ])('uses fresh cache first for %s', async (path, index) => {
     const w = worker();
     await w.seed(media[index], path, 'cached', {
@@ -164,7 +261,7 @@ describe('root service worker', () => {
 
   it('refreshes expired thumbnails, retaining stale data offline', async () => {
     const w = worker();
-    const path = '/cover.webp';
+    const path = '/media/covers/cover.webp';
     await w.seed(media[1], path, 'stale', { timestamp: 0, ttl: 1 });
     expect(
       await (await w.emit('fetch', { request: request(path) })).text()
@@ -225,9 +322,14 @@ describe('root service worker', () => {
 
   it('zero thumbnail TTL expires immediately rather than caching forever', async () => {
     const w = worker();
-    await w.seed(media[1], '/cover.png', 'expired', { timestamp: 0, ttl: 0 });
+    await w.seed(media[1], '/media/covers/cover.png', 'expired', {
+      timestamp: 0,
+      ttl: 0,
+    });
     expect(
-      await (await w.emit('fetch', { request: request('/cover.png') })).text()
+      await (
+        await w.emit('fetch', { request: request('/media/covers/cover.png') })
+      ).text()
     ).toBe('network');
   });
 

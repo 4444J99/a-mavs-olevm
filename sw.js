@@ -120,6 +120,14 @@ const mediaConfig = { ...MEDIA_DEFAULTS };
 function mediaStore(url) {
   const path = url.pathname.toLowerCase();
   if (/\.(mp3|wav|m4a|aac|flac|ogg)$/.test(path)) return MEDIA_CACHES[0];
+  // Same-origin application data and artwork must refresh with the app shell.
+  // MediaURLResolver serves local media from /media; the dedicated CDN is media.
+  if (
+    url.origin === self.location.origin &&
+    !path.startsWith('/media/') &&
+    !path.startsWith((_swBase + '/media/').toLowerCase())
+  )
+    return null;
   if (/\.(jpg|jpeg|png|gif|webp)$/.test(path)) return MEDIA_CACHES[1];
   if (path.endsWith('.json')) {
     return MEDIA_CACHES[path.includes('waveform') ? 2 : 3];
@@ -233,22 +241,23 @@ async function cachedAudioRange(response, range) {
   return new Response(bytes.slice(start, end + 1), { status: 206, headers });
 }
 
-async function mediaResponse(request, store) {
+async function mediaResponse(request, store, event) {
   let cache;
   let cached;
+  let shellFallback = false;
   try {
     cache = await caches.open(store);
     cached = await cache.match(request);
-    // The previous controlling root worker stored complete audio in its shell
-    // cache. Keep that offline history usable without reading other apps' stores.
-    if (!cached && store === MEDIA_CACHES[0]) {
+    // Retain previous root-cached audio, images and JSON without other apps' stores.
+    if (!cached) {
       cached = await (await caches.open(CACHE_NAME)).match(request);
+      shellFallback = Boolean(cached);
     }
   } catch (error) {
     console.warn('[MediaSW] Cache read failed:', error);
   }
   const range = request.headers.get('Range');
-  if (store !== MEDIA_CACHES[0] && cached) {
+  if (store !== MEDIA_CACHES[0] && cached && !shellFallback) {
     const metadata = mediaMetadata(cached);
     if (metadata?.ttl == null || Date.now() - metadata.timestamp < metadata.ttl)
       return cached;
@@ -258,7 +267,9 @@ async function mediaResponse(request, store) {
     network = await fetch(request);
     if (network.ok || network.type === 'opaque') {
       // Do not cache a range request even if an origin ignores Range and sends 200.
-      if (!range && cache) await storeMedia(cache, store, request, network);
+      if (!range && cache) {
+        event.waitUntil(storeMedia(cache, store, request, network));
+      }
       return network;
     }
   } catch {
@@ -272,7 +283,7 @@ async function mediaResponse(request, store) {
   return network || unavailable();
 }
 
-async function applicationResponse(request) {
+async function applicationResponse(request, event) {
   let cache;
   try {
     cache = await caches.open(CACHE_NAME);
@@ -283,7 +294,11 @@ async function applicationResponse(request) {
     const response = await fetch(request);
     if (response.status === 200 && cache) {
       try {
-        await cache.put(request, response.clone());
+        event.waitUntil(
+          cache.put(request, response.clone()).catch(error => {
+            console.warn('Application cache write failed:', error);
+          })
+        );
       } catch (error) {
         console.warn('Application cache write failed:', error);
       }
@@ -324,9 +339,9 @@ self.addEventListener('fetch', event => {
   }
   const store = mediaStore(url);
   if (store) {
-    event.respondWith(mediaResponse(request, store));
+    event.respondWith(mediaResponse(request, store, event));
   } else if (sameOrigin) {
-    event.respondWith(applicationResponse(request));
+    event.respondWith(applicationResponse(request, event));
   }
 });
 
