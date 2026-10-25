@@ -35,9 +35,9 @@
 
 'use strict';
 
-const { execSync, spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execFileSync, spawn } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // Quality presets for HLS encoding
 const QUALITY_PRESETS = {
@@ -87,9 +87,9 @@ const HLS_CONFIG = {
  */
 function checkDependencies() {
   try {
-    execSync('ffmpeg -version', { stdio: 'pipe' });
+    execFileSync('ffmpeg', ['-version'], { stdio: 'pipe', timeout: 10000 });
     return true;
-  } catch (error) {
+  } catch {
     console.error('Error: FFmpeg is not installed.');
     console.error('Install it with:');
     console.error('  macOS: brew install ffmpeg');
@@ -106,9 +106,18 @@ function checkDependencies() {
  */
 function getVideoInfo(inputPath) {
   try {
-    const result = execSync(
-      `ffprobe -v quiet -print_format json -show_format -show_streams "${inputPath}"`,
-      { encoding: 'utf-8' }
+    const result = execFileSync(
+      'ffprobe',
+      [
+        '-v',
+        'quiet',
+        '-print_format',
+        'json',
+        '-show_format',
+        '-show_streams',
+        inputPath,
+      ],
+      { encoding: 'utf-8', timeout: 30000 }
     );
     return JSON.parse(result);
   } catch (error) {
@@ -149,7 +158,7 @@ function filterQualityPresets(sourceInfo, requestedQualities) {
       continue;
     }
 
-    const [width, height] = preset.resolution.split('x').map(Number);
+    const [, height] = preset.resolution.split('x').map(Number);
 
     // Only include if source is >= this quality
     if (sourceInfo.height >= height) {
@@ -168,7 +177,7 @@ function filterQualityPresets(sourceInfo, requestedQualities) {
  * @returns {Promise<boolean>}
  */
 function generateVariant(inputPath, outputDir, preset) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const segmentsDir = path.join(outputDir, 'segments');
     if (!fs.existsSync(segmentsDir)) {
       fs.mkdirSync(segmentsDir, { recursive: true });
@@ -178,12 +187,18 @@ function generateVariant(inputPath, outputDir, preset) {
     const segmentPattern = path.join(segmentsDir, `${preset.name}_%03d.ts`);
 
     const args = [
+      '-threads',
+      '1',
+      '-filter_threads',
+      '1',
       '-i',
       inputPath,
       '-vf',
-      `scale=${preset.resolution}:force_original_aspect_ratio=decrease,pad=${preset.resolution}:(ow-iw)/2:(oh-ih)/2`,
+      `scale=${preset.resolution.replace('x', ':')}:force_original_aspect_ratio=decrease,pad=${preset.resolution.replace('x', ':')}:(ow-iw)/2:(oh-ih)/2`,
       '-c:v',
       'libx264',
+      '-threads',
+      '1',
       '-preset',
       'medium',
       '-crf',
@@ -204,6 +219,8 @@ function generateVariant(inputPath, outputDir, preset) {
       String(HLS_CONFIG.segmentDuration),
       '-hls_playlist_type',
       HLS_CONFIG.playlistType,
+      '-hls_base_url',
+      'segments/',
       '-hls_segment_filename',
       segmentPattern,
       '-y',
@@ -212,11 +229,11 @@ function generateVariant(inputPath, outputDir, preset) {
 
     console.log(`  Encoding ${preset.name}...`);
 
-    const proc = spawn('ffmpeg', args);
+    const proc = spawn('ffmpeg', args, { timeout: 120000 });
     let stderr = '';
 
     proc.stderr.on('data', data => {
-      stderr += data.toString();
+      stderr = (stderr + data.toString()).slice(-8000);
       // Parse progress from FFmpeg output
       const timeMatch = stderr.match(/time=(\d+:\d+:\d+\.\d+)/);
       if (timeMatch) {
@@ -231,6 +248,7 @@ function generateVariant(inputPath, outputDir, preset) {
         resolve(true);
       } else {
         console.error(`    Error encoding ${preset.name}`);
+        console.error(stderr.slice(-4000));
         resolve(false);
       }
     });
@@ -272,7 +290,7 @@ function generateMasterPlaylist(outputDir, variants) {
  * @returns {Promise<boolean>}
  */
 function generateThumbnails(inputPath, outputDir, videoInfo) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const duration = parseFloat(videoInfo.format.duration);
     const interval = 10; // Thumbnail every 10 seconds
     const thumbWidth = 160;
@@ -490,7 +508,7 @@ async function main() {
     console.log(`  ${options.output}/thumbnails.vtt`);
   }
 
-  process.exit(0);
+  process.exit(successfulVariants.length === presets.length ? 0 : 1);
 }
 
 // Run main function

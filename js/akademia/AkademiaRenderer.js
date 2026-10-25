@@ -46,6 +46,38 @@ class AkademiaRenderer {
   }
 
   /**
+   * Build the study detail rows for a studies-section card
+   * @param {Object} item - Item data with technique/reference/result fields
+   * @returns {DocumentFragment} Fragment containing detail elements
+   */
+  _buildStudyDetails(item) {
+    const frag = document.createDocumentFragment();
+    const rows = [
+      { label: 'Technique', value: item.technique },
+      { label: 'Reference', value: item.reference },
+      { label: 'Result', value: item.result },
+    ];
+    rows.forEach(({ label, value }) => {
+      if (!value) {
+        return;
+      }
+      const row = document.createElement('p');
+      row.className = 'f7 mt1 mb0';
+      const strong = document.createElement('strong');
+      strong.className = 'o-70';
+      strong.style.color = this.config.primaryColor;
+      strong.textContent = `${label}: `;
+      const span = document.createElement('span');
+      span.className = 'o-60';
+      span.textContent = value;
+      row.appendChild(strong);
+      row.appendChild(span);
+      frag.appendChild(row);
+    });
+    return frag;
+  }
+
+  /**
    * Render a single card element
    * @param {string} sectionId - Section key
    * @param {string} sectionTitle - Section display name
@@ -74,6 +106,9 @@ class AkademiaRenderer {
 
     card.appendChild(h3);
     card.appendChild(p);
+    if (sectionId === 'studies') {
+      card.appendChild(this._buildStudyDetails(item));
+    }
     card.appendChild(meta);
     return card;
   }

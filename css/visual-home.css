@@ -1,0 +1,225 @@
+/* ===================================
+   VISUAL HOME — image-first front door
+   Scoped to #visual-home so the existing temple/chambers are untouched.
+   Reuses gallery.css (grid · caption · filters · lightbox); this layer sets
+   the dark palette, the hero, and a few overrides.
+   ==================================== */
+
+#visual-home {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #0b0b0c;
+  color: #f4f4f5;
+  padding-bottom: 6rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* --- Hero --- */
+.works-hero {
+  text-align: center;
+  padding: 4.5rem 1.5rem 2rem;
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+.works-wordmark {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(2.5rem, 9vw, 5.5rem);
+  letter-spacing: 0.12em;
+  line-height: 1.02;
+  color: #ffffff;
+}
+
+.works-statement {
+  margin: 0.75rem 0 0;
+  font-size: clamp(0.8rem, 2.4vw, 1rem);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.works-hero-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.works-hero-link {
+  display: inline-block;
+  padding: 0.55rem 1.2rem;
+  border: 1px solid #3f3f46;
+  border-radius: 3px;
+  color: #e4e4e7;
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.works-hero-link:hover,
+.works-hero-link:focus {
+  color: #ffffff;
+  border-color: #ff00ff;
+  outline: none;
+}
+
+.works-hero-link.works-ig {
+  border-color: #ff00ff;
+  color: #ff00ff;
+}
+
+.works-hero-link.works-ig:hover,
+.works-hero-link.works-ig:focus {
+  background-color: #ff00ff;
+  /* Dark text on magenta for AA contrast (matches the active filter button). */
+  color: #0b0b0c;
+}
+
+/* --- Filter bar overrides (dark, centered) --- */
+#visual-home .gallery-filters {
+  justify-content: center;
+  background-color: transparent;
+  border-bottom: 1px solid #1f1f23;
+  padding: 0.5rem 1rem 1.5rem;
+  margin-bottom: 0;
+}
+
+#visual-home .gallery-filter-btn {
+  background-color: transparent;
+  color: #d4d4d8;
+  border-color: #3f3f46;
+}
+
+#visual-home .gallery-filter-btn:hover {
+  color: #ff00ff;
+  border-color: #ff00ff;
+}
+
+#visual-home .gallery-filter-btn.active {
+  background-color: #ff00ff;
+  /* Dark text on magenta: 6.1:1 contrast (WCAG AA). White was 3.13:1. */
+  color: #0b0b0c;
+  border-color: #ff00ff;
+}
+
+/* --- Grid overrides (dark, regardless of OS color scheme) --- */
+#visual-home .gallery-grid {
+  background-color: transparent;
+  max-width: 110rem;
+  margin: 0 auto;
+}
+
+#visual-home .gallery-item {
+  background-color: #161618;
+  border-color: #27272a;
+}
+
+#visual-home .gallery-item:hover {
+  border-color: #ff00ff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+#visual-home .gallery-image-container {
+  background-color: #161618;
+}
+
+#visual-home .gallery-image-container.loading::before {
+  background: linear-gradient(90deg, #18181b 0%, #232327 50%, #18181b 100%);
+  background-size: 200% 100%;
+}
+
+/* Video affordance: a play glyph over the poster */
+#visual-home .gallery-item.is-video .gallery-image-container::after {
+  content: '▶';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #ffffff;
+  background-color: rgba(255, 0, 255, 0.8);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* --- Empty / loading state --- */
+.works-empty {
+  text-align: center;
+  color: #a1a1aa;
+  padding: 4rem 1rem;
+  letter-spacing: 0.1em;
+}
+
+/* --- Lightbox additions --- */
+body.lightbox-open {
+  overflow: hidden;
+}
+
+/* Avoid transitioning inherited visibility: controls must accept focus on open. */
+#visual-home .lightbox {
+  transition: opacity 0.3s ease;
+}
+
+#visual-home .lightbox-close,
+#visual-home .lightbox-nav {
+  transition:
+    background-color 0.3s ease,
+    transform 0.3s ease;
+}
+
+#visual-home .lightbox-caption p {
+  color: #ffffff;
+}
+
+#visual-home .lightbox-category {
+  color: #000000;
+}
+
+.lightbox-ig-link {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  color: #ff66ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
+.lightbox-ig-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* --- Responsive --- */
+@media (max-width: 480px) {
+  .works-hero {
+    padding: 3rem 1rem 1.25rem;
+  }
+
+  .works-hero-link {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+}
+
+/* Respect reduced motion (gallery.css already covers its own animations) */
+@media (prefers-reduced-motion: reduce) {
+  .works-hero-link {
+    transition: none;
+  }
+}

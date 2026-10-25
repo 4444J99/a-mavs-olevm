@@ -261,6 +261,11 @@ function showNewSection(_loadingSection) {
         if (window.location.hash !== _loadingSection) {
           window.history.pushState(null, '', _loadingSection);
         }
+        window.dispatchEvent(
+          new CustomEvent('etceter4:navigation', {
+            detail: { route: _loadingSection },
+          })
+        );
         fadeOutPage(currentPage, () => {
           fadeInPage(loadingSection, () => {
             // Transition Living Pantheon to new chamber after page is visible
@@ -588,6 +593,9 @@ document.addEventListener('keydown', event => {
   }
 
   // Let the active modal handle Escape/arrows without navigating behind it.
+  if (document.querySelector('.lightbox.active')) {
+    return;
+  }
   if (
     typeof DiscoveryController !== 'undefined' &&
     DiscoveryController.getInstance().isSearchModalOpen

@@ -8,6 +8,7 @@ export const exhibits = [
 // These are public surfaces, not a copy of the repository. New roots need review.
 export const rootFiles = new Set([
   'index.html',
+  'data/works.json',
   '404.html',
   'OGOD.html',
   'analog.html',

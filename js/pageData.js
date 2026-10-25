@@ -30,6 +30,7 @@
  */
 
 const _pID = {
+  visualHome: '#visual-home',
   landing: '#landing',
   menu: '#menu',
   sound: '#sound',
@@ -565,6 +566,17 @@ pages = [
   pages.ergasterion,
   pages.khronos,
   pages.discovery,
+  new Page({
+    id: _pID.visualHome,
+    tier: 1,
+    downLinks: [_pID.landing, _pID.menu],
+    initialize() {
+      if (typeof WorksGallery !== 'undefined') {
+        return WorksGallery.init({ root: _pID.visualHome });
+      }
+      throw new Error('Works gallery unavailable');
+    },
+  }),
   new Page({
     id: _pID.landing,
     tier: 1,

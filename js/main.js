@@ -22,7 +22,7 @@
  * Flow:
  * 1. Check for hash in URL (e.g., #landing, #diary, #stills)
  * 2. If hash exists, show that section and initialize it
- * 3. If no hash, default to showing the landing page
+ * 3. If no hash, initialize the visual home
  * 4. Sets the global currentPage variable to track active page
  */
 
@@ -56,7 +56,7 @@ function handleHashChange() {
     return;
   }
 
-  const hash = window.location.hash || '#landing';
+  const hash = window.location.hash || '#visual-home';
 
   // showNewSection decides whether the route is settled. During an outgoing
   // fade, the old page can still be current even though a new route is pending.
@@ -241,8 +241,8 @@ try {
     Promise.resolve()
       .then(() => {
         verifyNavigationRuntime();
-        const hash = window.location.hash;
-        if (hash) {
+        let hash = window.location.hash || '#visual-home';
+        {
           let target;
           let element;
           try {
@@ -250,13 +250,12 @@ try {
             target = Page.findPage(hash);
           } catch (_error) {
             console.warn(
-              `Invalid hash on load: ${hash}, defaulting to landing`
+              `Invalid hash on load: ${hash}, defaulting to visual home`
             );
-            currentPage = Page.findPage('#landing');
-            $('#landing').removeClass('dn');
-            window.location.hash = '#landing';
-            finishApplicationStartup('#landing');
-            return;
+            hash = '#visual-home';
+            target = Page.findPage(hash);
+            element = $(hash);
+            window.location.hash = hash;
           }
           currentPage = target;
           return Promise.resolve()
@@ -273,9 +272,6 @@ try {
               finishApplicationStartup('#landing');
             });
         }
-        currentPage = Page.findPage('#landing');
-        $('#landing').removeClass('dn');
-        finishApplicationStartup('#landing');
       })
       .catch(failApplicationStartup);
   });
