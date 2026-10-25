@@ -11,20 +11,9 @@ describe('FilterSystem', () => {
 
   beforeEach(() => {
     // Mock window.history
-    const mockHistory = {
-      replaceState: vi.fn(),
-      pushState: vi.fn(),
-    };
-    global.history = mockHistory;
-
-    // Mock window.location
-    delete global.window.location;
-    global.window.location = {
-      search: '',
-      hash: '#discovery',
-      pathname: '/',
-      origin: 'http://localhost',
-    };
+    window.history.replaceState(null, '', '/#discovery');
+    vi.spyOn(window.history, 'replaceState').mockImplementation(() => {});
+    vi.spyOn(window.history, 'pushState').mockImplementation(() => {});
 
     // Create filter system instance
     filterSystem = {
@@ -370,7 +359,7 @@ describe('FilterSystem', () => {
 
     it('should generate clean URL with no filters', () => {
       const url = filterSystem.getShareableUrl();
-      expect(url).toBe('http://localhost/#discovery');
+      expect(url).toBe(`${window.location.origin}/#discovery`);
     });
 
     it('should include year range in URL', () => {
