@@ -29,6 +29,7 @@ export default [
       'js/discovery/**/*.js',
       'js/ergasterion/**/*.js',
       'js/generative/**/*.js',
+      'js/ai/**/*.js',
     ],
     languageOptions: {
       ecmaVersion: 2024,
@@ -178,8 +179,13 @@ export default [
     },
   },
   {
-    // Naming system files use ES modules
-    files: ['js/nameSearch.js', 'js/namingAPI.js', 'js/namingStrategies.js'],
+    // ES module files
+    files: [
+      'js/nameSearch.js',
+      'js/namingAPI.js',
+      'js/namingStrategies.js',
+      'js/ai/**/*.js',
+    ],
     languageOptions: {
       sourceType: 'module',
     },

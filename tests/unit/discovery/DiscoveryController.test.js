@@ -651,4 +651,86 @@ describe('DiscoveryController', () => {
     );
     expect(instance.isSearchModalOpen).toBe(false);
   });
+
+  describe('Front-door entry and revival state transitions (#139, #140)', () => {
+    it('handles visual front-door entry and navigates to chamber with state parity (#139)', async () => {
+      window.location.hash = '#landing';
+      const instance = DiscoveryController.getInstance();
+      await instance.initialize();
+
+      // Open search modal from front-door
+      instance.openSearchModal();
+      expect(instance.isSearchModalOpen).toBe(true);
+      expect(document.body.style.overflow).toBe('hidden');
+
+      // Navigate to item
+      instance._navigateToItem('item-1');
+
+      // Parity check: modal closed, scroll restored, router invoked
+      expect(instance.isSearchModalOpen).toBe(false);
+      expect(document.body.style.overflow).toBe('');
+      expect(sessionStorage.getItem('etceter4-highlight-item')).toBe('item-1');
+      expect(mocks.showNewSection).toHaveBeenCalledWith('#akademia');
+      expect(instance.getStatus().isSearchModalOpen).toBe(false);
+    });
+
+    it('revives deep-linked chamber from URL parameter and clears modal state (#139, #140)', async () => {
+      vi.useFakeTimers();
+      mocks.shareLinks.getItemIdFromUrl.mockReturnValue('diary-42');
+      mocks.registry.getItem.mockReturnValue({
+        id: 'diary-42',
+        chamber: 'bibliotheke',
+        chamberName: 'BIBLIOTHEKE',
+      });
+
+      const instance = DiscoveryController.getInstance();
+      await instance.initialize();
+
+      // Ensure modal is closed prior to revival
+      expect(mocks.showNewSection).not.toHaveBeenCalled();
+
+      // Advance timer to trigger _checkForSharedItem
+      await vi.advanceTimersByTimeAsync(500);
+
+      expect(mocks.showNewSection).toHaveBeenCalledWith('#bibliotheke');
+      expect(sessionStorage.getItem('etceter4-highlight-item')).toBe('diary-42');
+      expect(instance.isSearchModalOpen).toBe(false);
+    });
+
+    it('recovers state parity during rapid back-to-back transition requests (#140)', async () => {
+      const instance = DiscoveryController.getInstance();
+      await instance.initialize();
+
+      // Simulate busy router where showNewSection queues transition and returns false
+      mocks.showNewSection.mockReturnValue(false);
+
+      instance.openSearchModal();
+      expect(instance.isSearchModalOpen).toBe(true);
+
+      // Trigger rapid successive navigations
+      instance._navigateToItem('item-1');
+      expect(sessionStorage.getItem('etceter4-highlight-item')).toBe('item-1');
+      expect(instance.isSearchModalOpen).toBe(false);
+
+      instance._navigateToItem('item-1');
+      expect(mocks.showNewSection).toHaveBeenCalledTimes(2);
+      expect(instance.getStatus().isSearchModalOpen).toBe(false);
+      expect(document.body.style.overflow).toBe('');
+    });
+
+    it('survives router failure and gracefully updates hash for deep-link revival (#140)', async () => {
+      const instance = DiscoveryController.getInstance();
+      await instance.initialize();
+
+      // Simulate routing exception during transition
+      mocks.showNewSection.mockImplementation(() => {
+        throw new Error('Transition lock error');
+      });
+
+      expect(() => instance._navigateToItem('item-1')).not.toThrow();
+      expect(window.location.hash).toBe('#akademia');
+      expect(sessionStorage.getItem('etceter4-highlight-item')).toBe('item-1');
+      expect(instance.isSearchModalOpen).toBe(false);
+    });
+  });
 });

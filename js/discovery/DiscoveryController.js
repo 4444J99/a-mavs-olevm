@@ -433,22 +433,36 @@ class DiscoveryController {
    * @private
    */
   _navigateToItem(itemId) {
-    const item = this.registry.getItem(itemId);
+    const item = this.registry ? this.registry.getItem(itemId) : null;
     if (!item) {
-      return;
+      return false;
+    }
+
+    if (this.isSearchModalOpen) {
+      this.closeSearchModal();
     }
 
     // Navigate to item's chamber with item highlighted
     const chamberHash = `#${item.chamber}`;
 
     // Store item ID to highlight after navigation
-    sessionStorage.setItem('etceter4-highlight-item', itemId);
+    try {
+      sessionStorage.setItem('etceter4-highlight-item', itemId);
+    } catch (_storageErr) {
+      // Continue navigation even if storage is restricted
+    }
 
-    // Navigate
+    // Navigate maintaining parity with page.js
     if (typeof showNewSection === 'function') {
-      showNewSection(chamberHash);
+      try {
+        return showNewSection(chamberHash);
+      } catch (_navErr) {
+        window.location.hash = chamberHash;
+        return false;
+      }
     } else {
       window.location.hash = chamberHash;
+      return true;
     }
   }
 
