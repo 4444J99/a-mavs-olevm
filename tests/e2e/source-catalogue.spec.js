@@ -218,7 +218,7 @@ test.describe('offline catalogue', () => {
       };
     });
     expect(cached).toEqual({
-      cacheName: 'etceter4-shell-v6',
+      cacheName: 'etceter4-v5',
       catalogue: true,
       config: true,
     });
