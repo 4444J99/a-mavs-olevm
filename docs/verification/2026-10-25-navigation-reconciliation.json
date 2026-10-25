@@ -1,0 +1,179 @@
+{
+  "schema": "gmse.navigation_reconciliation.v1",
+  "original_pr": 138,
+  "original_head": "3b816051226c68e6c0f71b6bff792253ed974733",
+  "owner": "https://github.com/4444J99/generative-multimedia-spatial-environment/issues/134",
+  "records": [
+    {
+      "path": ".config/eslint.config.js",
+      "original_blob": "25997ce77f9e8fda6154384f26ffaf5c6b1351d1",
+      "original_sha256": "7081a631a07f3c6dfa937cf058294821712f3344883b61ebfbd756c534f3799d",
+      "candidate_sha256": "9e20ae65adbdddfbbf6b499a66008963a64402a8acd9b72f89213064ed30a5b0",
+      "disposition": "original coverage retained with AI module coverage"
+    },
+    {
+      "path": "docs/verification/2026-09-13-navigation-recovery.md",
+      "original_blob": "b5e0a156bad5cd1a5d312514d57a637304fabc60",
+      "original_sha256": "30ad7f2c31f3f04bb4d481c080aed6c35222925de0f66ea7b7bc0edd18de19fe",
+      "candidate_sha256": "30ad7f2c31f3f04bb4d481c080aed6c35222925de0f66ea7b7bc0edd18de19fe",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "index.html",
+      "original_blob": "0649a8a3da59cd071a27990b154490a9df9006e9",
+      "original_sha256": "7b040eb0bb4e941645803467d3f04d4aa669f65fdbca3062f85131d8e167d46b",
+      "candidate_sha256": "76d9b205235ecf265394792dee9396ebbd904354c6e3dc32b3be369b17a69e42",
+      "disposition": "original navigation retained with source catalogue and accessibility corrections"
+    },
+    {
+      "path": "js/chamberManifest.js",
+      "original_blob": "7c0e235495ba83744ac613aa85128c38694ba67f",
+      "original_sha256": "78dceb3cff579987e29d7a99877187335a5d4f847c083a904b8083c7302f6fb6",
+      "candidate_sha256": "5b8f92a3c56a510e709497e80f4c9c4d0815cb68708cfc7ef219d04dfe5f36b7",
+      "disposition": "original prerequisites retained with Howler"
+    },
+    {
+      "path": "js/discovery/ContentRegistry.js",
+      "original_blob": "44b683a2f0c0289e30fb6871727030f3f1f46d0f",
+      "original_sha256": "40fa89d0cfa1fe476cae1cb5cb4e66362a50e69e0a71e34cbc77aa70038b2d69",
+      "candidate_sha256": "40fa89d0cfa1fe476cae1cb5cb4e66362a50e69e0a71e34cbc77aa70038b2d69",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "js/discovery/DiscoveryController.js",
+      "original_blob": "ac506ad59382a4ced33da60c78fdc1f48351b5ad",
+      "original_sha256": "fa5f69f7fb0c626dc6d07cba2f4524ffbfb38af622417a5342a9c2504ee416b6",
+      "candidate_sha256": "03a51ffcbcb098bfde882c9d840740cdaeb26bfe0e38c2a921439caf71f3da3b",
+      "disposition": "original initialization retained with safe modal navigation and diagnostics"
+    },
+    {
+      "path": "js/main.js",
+      "original_blob": "d1d5697aa4a3d5e8984ae6655447e5846bb30e04",
+      "original_sha256": "1b6a7103f1d4b3de2d670c4d7bd807445e6bd624c4b3fc4ba0891ce4824af45b",
+      "candidate_sha256": "8d79206c5cf38860fcf28b797384323cb9ebc92b7e6fe17f83099f6dcc0e9a82",
+      "disposition": "original startup retained with dependency validation and isolated search failure"
+    },
+    {
+      "path": "js/modules/ChamberLoader.js",
+      "original_blob": "5d4143699c79bf2076cec8223dd896ed2425fc64",
+      "original_sha256": "2f94e39ce1ada75ec743069fb683da123ae6f81160780cca2af47551059d7dc1",
+      "candidate_sha256": "2f94e39ce1ada75ec743069fb683da123ae6f81160780cca2af47551059d7dc1",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "js/modules/ScriptLoader.js",
+      "original_blob": "1ccbceaf53449a5a7a4c2b89e514e92562fcf75a",
+      "original_sha256": "2a8002c7fcb46e3a1ce87dcf971f4e8d222cb022bb50bd37b7d23eab5962d412",
+      "candidate_sha256": "2a8002c7fcb46e3a1ce87dcf971f4e8d222cb022bb50bd37b7d23eab5962d412",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "js/page.js",
+      "original_blob": "70e4cafe31e1c4910f75767535707d93ff5e0c4a",
+      "original_sha256": "437284598480dc1f9099a85c505fb15b1013f397fed1940fe679853473b85939",
+      "candidate_sha256": "437284598480dc1f9099a85c505fb15b1013f397fed1940fe679853473b85939",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "js/pageData.js",
+      "original_blob": "959975ee90228e5cc32e42709639028506ea6371",
+      "original_sha256": "5ae1b8b6ce1c1d107cd789851c3be522f89fda9af98c4357f4586add2e889f55",
+      "candidate_sha256": "cfda06946b3236fe96072f6ec1f1b0f834de204312012aea34e3b9b1764eec11",
+      "disposition": "original discovery promise return restored; later catalogue-driven embeds retained"
+    },
+    {
+      "path": "js/runtimeFallback.js",
+      "original_blob": "7f376c86957fe8a39ee13c3a6ec7c52297cd8418",
+      "original_sha256": "2b26ec275a80d11b5d7c5ab1620adc5f6c768c8397e507637a12b88bbdab744e",
+      "candidate_sha256": "2b26ec275a80d11b5d7c5ab1620adc5f6c768c8397e507637a12b88bbdab744e",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "package.json",
+      "original_blob": "b0ea11614821b73d602ba1e6d61cb36b2a8f369d",
+      "original_sha256": "c9de46b358bbbb32454410438b22284c102a90c26e68afedf152466dd1619ab7",
+      "candidate_sha256": "832ff32388547075ed26122ebbace91bb2cec8a5f553351f08e271f6a64c5e64",
+      "disposition": "original navigation checks retained with current tooling and publication commands"
+    },
+    {
+      "path": "tests/e2e/chamber-prerequisites.spec.js",
+      "original_blob": "86fc240548eff90030c21cb8d11fedd47f7610bb",
+      "original_sha256": "9c760f70fef878726a03c8ccfdddff503608326ed90771504d2d00640af21b47",
+      "candidate_sha256": "9c760f70fef878726a03c8ccfdddff503608326ed90771504d2d00640af21b47",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/e2e/navigation-runtime.spec.js",
+      "original_blob": "9d7265adb795722d3751c4e24c94a7f4d8bff9d3",
+      "original_sha256": "b37800416f2ed879cd1f8471c65108a98241d2aa4887c3e3cb653f9fbb2b8f61",
+      "candidate_sha256": "b37800416f2ed879cd1f8471c65108a98241d2aa4887c3e3cb653f9fbb2b8f61",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/e2e/runtime-startup.spec.js",
+      "original_blob": "0d0a8d5b0fb9eb767f3bb05a3c8c734c024500f7",
+      "original_sha256": "c2e00e690d51163f2ba546c43be719c0ef5e4392ddff1413fc28a179bf16fd00",
+      "candidate_sha256": "43d66feba5d3fcf231deff356ce7b5a2f83577d6d8db82e4cc360b832c08c2d5",
+      "disposition": "original cases retained with more missing-dependency cases"
+    },
+    {
+      "path": "tests/unit/chamberPrerequisites.test.js",
+      "original_blob": "fb1909ce1500f8416f34a61cd47f67f3ee00c023",
+      "original_sha256": "03e48f0cefc4959444d45848e247b2af5043c3ec6289b4e7267837b7a3b815ce",
+      "candidate_sha256": "03e48f0cefc4959444d45848e247b2af5043c3ec6289b4e7267837b7a3b815ce",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/unit/discovery/sourceConfigCollectors.test.js",
+      "original_blob": "b5dcec4c4dd8cb70b1faa2ab06489d4c513f5d42",
+      "original_sha256": "a21507f2e48eae2a9030dcb597eac544cf6dc77b28bb02e04d07a03c0349b2ef",
+      "candidate_sha256": "a21507f2e48eae2a9030dcb597eac544cf6dc77b28bb02e04d07a03c0349b2ef",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/unit/modules/ChamberLoader.test.js",
+      "original_blob": "463c992d048f4c5faa1f63eebcbc7dc83efe9c89",
+      "original_sha256": "b2b225826b3cccbad3eda05cc41d1b8775e1a3b9e389981804a7625cfe340455",
+      "candidate_sha256": "b2b225826b3cccbad3eda05cc41d1b8775e1a3b9e389981804a7625cfe340455",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/unit/modules/ScriptLoader.test.js",
+      "original_blob": "e59a01e42a4f9cd30ef7a61981bf6556c678147f",
+      "original_sha256": "0964021f9b1211f964ca1951ff653fedd6abf838ebf230b64e7ffcba1b73fb5c",
+      "candidate_sha256": "0964021f9b1211f964ca1951ff653fedd6abf838ebf230b64e7ffcba1b73fb5c",
+      "disposition": "exact_source_retained"
+    },
+    {
+      "path": "tests/unit/navigationRuntime.test.js",
+      "original_blob": "78ae938ac52d8e78cf79e2ed653e8d35b06008cb",
+      "original_sha256": "9c623a72650a2527b2ae6eb34d4cfcd8417db0a4620f687312bf8a9f71fd12a4",
+      "candidate_sha256": "db6131d54753d9a70b714b17b2b50ccff63533235324133f9b343788c6fc8d64",
+      "disposition": "original cases retained with actual pageData delayed-rejection and retry regression"
+    },
+    {
+      "path": "tests/unit/runtimeStartup.test.js",
+      "original_blob": "19552097faa287b8743fde57c7434b9d3f3b9015",
+      "original_sha256": "1fc2a8bc0964276c92938a7a8d9f8860ba63cec309cf8b722ce5d40d7012e1e6",
+      "candidate_sha256": "4c6b6d7422cdde9e9fea9ed5a56ea7f8ffb7d1c9e5b2d402a21341a8b64fe8fe",
+      "disposition": "original cases retained with dependency and search isolation regressions"
+    }
+  ],
+  "review": "independent full22-path review found no additional lost requirement; no blocking findings",
+  "regression": "actual Page plus pageData initializer failed the pending-state assertion before returning the controller promise; rejection remains retryable after repair",
+  "validation": {
+    "unit_files": 6,
+    "unit_passed": 76,
+    "native_cases": 54,
+    "native_projects": [
+      "Chromium",
+      "Firefox",
+      "Mobile Chrome"
+    ],
+    "native_seconds_approx": 78,
+    "source_lint": "zero errors; two preexisting unused-argument warnings",
+    "format": "passed",
+    "whitespace": "passed"
+  },
+  "acceptance_boundary": "Source and native navigation proof only. All artwork/media/device/publication/custody requirements retain their source owners; original carriers remain until verified default readback."
+}
