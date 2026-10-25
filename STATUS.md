@@ -4,6 +4,21 @@ Evidence snapshot: 2026-09-13, surveyed `main`
 `477d62305943049f638be8fd46d74bd89f4d582f`.
 This is the starting record; later receipts must name their tested commit.
 
+## Green-progress receipt — 2026-10-25
+
+On success of workflow `validate-dependencies` (run 40188169870) for PR #183
+(`feat/gmse-t08-navigation-cache`) at exact head `6b66a5e4aabad5736d3db236929ca8a42f95ab29`.
+Small documentation progress step recording the green dependency check on the current top-ranked navigation-recovery / cache-isolation / OGOD-verification integration.
+No code change beyond this receipt; no force-push; no bypass.
+
+[... the rest of the original content remains unchanged below this insertion ...]
+
+# Stewardship status
+
+Evidence snapshot: 2026-09-13, surveyed `main`
+`477d62305943049f638be8fd46d74bd89f4d582f`.
+This is the starting record; later receipts must name their tested commit.
+
 ## Purpose and release boundary
 
 Evolved ETCETER4 exhibition connecting albums, visual work, words, manuscripts,
