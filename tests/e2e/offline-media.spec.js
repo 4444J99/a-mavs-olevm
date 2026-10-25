@@ -101,33 +101,48 @@ for (const base of ['', '/a-mavs-olevm']) {
     context,
   }) => {
     const host = await serve(base);
+    const legacyBody = readFileSync(
+      'js/living-pantheon/data/fragments.json',
+      'utf8'
+    );
 
     try {
       await page.goto(host.origin + base + '/__client.html');
-      const initial = await page.evaluate(async base => {
-        const names = [
-          'etceter4-v5',
-          'media-cache-v1-audio',
-          'media-cache-v1-thumbnails',
-          'media-cache-v1-waveforms',
-          'media-cache-v1-metadata',
-          'unrelated',
-          'etceter4-v4',
-          'media-cache-v0-audio',
-        ];
-        for (const name of names)
+      const initial = await page.evaluate(
+        async ({ base, legacyBody }) => {
+          const names = [
+            'etceter4-v5',
+            'media-cache-v1-audio',
+            'media-cache-v1-thumbnails',
+            'media-cache-v1-waveforms',
+            'media-cache-v1-metadata',
+            'unrelated',
+            'etceter4-v4',
+            'media-cache-v0-audio',
+          ];
+          for (const name of names)
+            await (
+              await caches.open(name)
+            ).put(base + '/sentinel', new Response(name));
           await (
-            await caches.open(name)
-          ).put(base + '/sentinel', new Response(name));
-        await navigator.serviceWorker.register(
-          base + '/js/media/cache/MediaServiceWorker.js'
-        );
-        const registration = await navigator.serviceWorker.register(
-          base + '/sw.js'
-        );
-        await navigator.serviceWorker.ready;
-        return registration.scope;
-      }, base);
+            await caches.open('media-cache-v1-metadata')
+          ).put(
+            base + '/js/living-pantheon/data/fragments.json',
+            new Response(legacyBody, {
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
+          await navigator.serviceWorker.register(
+            base + '/js/media/cache/MediaServiceWorker.js'
+          );
+          const registration = await navigator.serviceWorker.register(
+            base + '/sw.js'
+          );
+          await navigator.serviceWorker.ready;
+          return registration.scope;
+        },
+        { base, legacyBody }
+      );
       expect(initial).toBe(host.origin + base + '/');
       await page.waitForFunction(() =>
         navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js')
@@ -257,7 +272,7 @@ for (const base of ['', '/a-mavs-olevm']) {
       await host.close();
       await context.setOffline(true);
       const offline = await page.evaluate(
-        async ({ audioPath, base }) => {
+        async ({ audioPath, base, legacyBody }) => {
           const range = await fetch(audioPath, {
             headers: { Range: 'bytes=10-19' },
           });
@@ -267,15 +282,20 @@ for (const base of ['', '/a-mavs-olevm']) {
             range: range.headers.get('Content-Range'),
             size: (await range.arrayBuffer()).byteLength,
             fragment: fragment.ok,
+            legacyApplication:
+              (await (
+                await fetch(base + '/js/living-pantheon/data/fragments.json')
+              ).text()) === legacyBody,
           };
         },
-        { audioPath, base }
+        { audioPath, base, legacyBody }
       );
       expect(offline).toEqual({
         status: 206,
         range: `bytes 10-19/${originalSize}`,
         size: 10,
         fragment: true,
+        legacyApplication: true,
       });
       // Real browser audio decoder and range requests, including offline seeking.
       await page.evaluate(audioPath => {

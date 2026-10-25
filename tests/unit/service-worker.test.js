@@ -109,6 +109,42 @@ const request = (path, options) => new Request(new URL(path, origin), options);
 const offline = w => w.fetch.mockRejectedValue(new TypeError('offline'));
 
 describe('root service worker', () => {
+  it.each([
+    ['/js/living-pantheon/data/fragments.json', 3],
+    ['/img/interface.png', 1],
+    ['/js/data/waveform-settings.json', 2],
+  ])(
+    'retains formerly media-cached application asset %s offline',
+    async (path, index) => {
+      const w = worker();
+      await w.seed(media[index], path, 'historical application content');
+      offline(w);
+      expect(
+        await (await w.emit('fetch', { request: request(path) })).text()
+      ).toBe('historical application content');
+    }
+  );
+
+  it('does not recover an application asset from an unrelated store', async () => {
+    const w = worker();
+    await w.seed('another-app', '/img/interface.png', 'unrelated');
+    offline(w);
+    expect(
+      (await w.emit('fetch', { request: request('/img/interface.png') })).status
+    ).toBe(503);
+  });
+
+  it('prefers the current application copy over a historical media copy offline', async () => {
+    const w = worker();
+    const path = '/js/living-pantheon/data/fragments.json';
+    await w.seed(media[3], path, 'historical');
+    await w.seed(shell, path, 'current');
+    offline(w);
+    expect(
+      await (await w.emit('fetch', { request: request(path) })).text()
+    ).toBe('current');
+  });
+
   it('serializes an expiry scan with a foreground refresh of the same entry', async () => {
     const w = worker();
     const path = '/media/covers/race.png';

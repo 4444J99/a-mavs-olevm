@@ -135,12 +135,13 @@ function queueMediaMaintenance(store, task) {
   });
 }
 
-function mediaStore(url) {
+function mediaStore(url, includeApplicationAssets = false) {
   const path = url.pathname.toLowerCase();
   if (/\.(mp3|wav|m4a|aac|flac|ogg)$/.test(path)) return MEDIA_CACHES[0];
   // Same-origin application data and artwork must refresh with the app shell.
   // MediaURLResolver serves local media from /media; the dedicated CDN is media.
   if (
+    !includeApplicationAssets &&
     url.origin === self.location.origin &&
     !path.startsWith('/media/') &&
     !path.startsWith((_swBase + '/media/').toLowerCase())
@@ -363,17 +364,32 @@ async function applicationResponse(request, event) {
     }
     return response;
   } catch {
-    if (!cache) return unavailable();
     try {
-      return (
-        (await cache.match(request)) ||
-        (request.mode === 'navigate' &&
-          (await cache.match(_swBase + '/offline.html'))) ||
-        unavailable()
-      );
-    } catch {
-      return unavailable();
+      const cached = cache && (await cache.match(request));
+      if (cached) return cached;
+    } catch (error) {
+      console.warn('Application cache read failed:', error);
     }
+    // Earlier workers routed all images/JSON into these owned v1 media stores.
+    // Keep those copies usable only on network failure, without restoring TTL
+    // routing for live application data or reading unrelated caches.
+    const formerStore = mediaStore(new URL(request.url), true);
+    if (formerStore) {
+      try {
+        const historic = await (await caches.open(formerStore)).match(request);
+        if (historic) return historic;
+      } catch (error) {
+        console.warn('Historical application cache read failed:', error);
+      }
+    }
+    try {
+      if (cache && request.mode === 'navigate') {
+        return (await cache.match(_swBase + '/offline.html')) || unavailable();
+      }
+    } catch (error) {
+      console.warn('Offline shell read failed:', error);
+    }
+    return unavailable();
   }
 }
 

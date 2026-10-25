@@ -42,3 +42,24 @@ Independent review reproduced the refresh race, then found no remaining Importan
 blockers after repair. This is source/local-browser evidence; hosted rollout,
 live CDN configuration, Safari/iPhone and artistic/device acceptance remain open.
 Original carriers remain retained pending verified default integration.
+
+## Follow-up review: historical application assets
+
+PR189 review PRRT_kwDONx_cBs6wEKcj was accepted after three regressions reproduced
+503 responses for images, application JSON and waveform-named application JSON
+present only in their former owned v1 media stores. On network failure the worker
+now prefers the current application cache, then the exact former owned media
+store, then the navigation fallback. Live application resources remain
+network-first and unrelated stores remain inaccessible. All54 worker cases pass,
+including the reviewed application-copy priority case.
+The original native offline suite seeds the actual fragments JSON in the old
+metadata store and verifies its bytes after the HTTP origin is shut down. All12
+offline/streaming/management cases pass across the three browser projects in
+18.2 seconds. An initial fixture-argument binding error was corrected before
+this passing run; no failing assertion was removed.
+
+The user also identified repeated normal-browser tab launches. BrowserSync's
+installed default is open: local / browser: default; Playwright previously used
+the manual dev command without overriding it. Automated test startup now passes
+--no-open. The manual development command is preserved. One scoped headless
+probe passed with the new configuration, and its port3000 server exited.
