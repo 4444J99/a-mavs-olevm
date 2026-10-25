@@ -190,6 +190,20 @@ body.lightbox-open {
   color: #000000;
 }
 
+#visual-home .lightbox-image-container {
+  min-height: 0;
+  flex-shrink: 1;
+}
+
+#visual-home .lightbox-image-container video {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+}
+
 .lightbox-ig-link {
   display: inline-block;
   margin: 0 0 0.75rem;

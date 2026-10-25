@@ -56,6 +56,14 @@ export function saveWorks(filename, manifest) {
 
 /** Reprocessing replaces generated media fields, never the artist's curation. */
 export function upsertGenerated(existing, generated) {
+  const oldSource = existing.type === 'video' ? existing.poster : existing.src;
+  const newSource =
+    generated.type === 'video' ? generated.poster : generated.src;
+  // img/thumbs is owned by backfill-thumbs. Preserve manually curated cover
+  // pointers elsewhere; invalidate generated pointers without removing files.
+  if (oldSource !== newSource && existing.thumb?.startsWith('img/thumbs/')) {
+    delete existing.thumb;
+  }
   const mediaFields = ['src', 'srcset', 'w', 'h', 'hls', 'poster'];
   for (const key of mediaFields) {
     if (Object.hasOwn(generated, key)) existing[key] = generated[key];

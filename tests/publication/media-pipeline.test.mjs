@@ -70,7 +70,7 @@ const curated = {
       date: '2020',
       featured: true,
       ig_url: 'https://example.test/work',
-      thumb: 'img/thumbs/existing.webp',
+      thumb: 'img/curated-existing.webp',
     },
   ],
 };
@@ -92,6 +92,95 @@ test('the share-image CLI renders a real 1200 by 630 JPEG without changing its s
   assert.equal(meta.width, 1200);
   assert.equal(meta.height, 630);
   assert.deepEqual(readFileSync(input), before);
+});
+
+test('ingest and thumbnail generation apply EXIF orientation before stripping metadata', async t => {
+  const f = fixture(t);
+  f.write({ version: 1, works: [] });
+  const input = path.join(f.root, 'input/portrait.jpg');
+  await sharp({
+    create: { width: 8, height: 4, channels: 3, background: 'red' },
+  })
+    .jpeg()
+    .withMetadata({ orientation: 6 })
+    .toFile(input);
+  const before = readFileSync(input);
+  const result = f.run('ingest-media.mjs', [
+    path.dirname(input),
+    '--category',
+    'Photography',
+  ]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const work = f.read().works[0];
+  assert.equal(work.w, 4);
+  assert.equal(work.h, 8);
+  const meta = await sharp(path.join(f.root, work.src)).metadata();
+  assert.equal(meta.width, 4);
+  assert.equal(meta.height, 8);
+  f.write({
+    version: 1,
+    works: [{ id: 'portrait', src: 'input/portrait.jpg' }],
+  });
+  const thumbnails = f.run('backfill-thumbs.mjs');
+  assert.equal(thumbnails.status, 0, thumbnails.stdout + thumbnails.stderr);
+  const thumb = f.read().works[0];
+  const thumbMeta = await sharp(path.join(f.root, thumb.thumb)).metadata();
+  assert.equal(thumb.w, 4);
+  assert.equal(thumb.h, 8);
+  assert.equal(thumbMeta.width, 4);
+  assert.equal(thumbMeta.height, 8);
+  assert.deepEqual(readFileSync(input), before);
+});
+
+test('generated filenames remain real browser URLs for reserved input characters', async t => {
+  const f = fixture(t);
+  f.write({ version: 1, works: [] });
+  const input = path.join(f.root, 'input/photo #1?%20.png');
+  await sharp({
+    create: { width: 8, height: 6, channels: 3, background: 'blue' },
+  })
+    .png()
+    .toFile(input);
+  const result = f.run('ingest-media.mjs', [
+    path.dirname(input),
+    '--category',
+    'Photography',
+  ]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const work = f.read().works[0];
+  for (const source of [
+    work.src,
+    ...work.srcset.webp.map(item => item.split(' ')[0]),
+    ...work.srcset.avif.map(item => item.split(' ')[0]),
+  ]) {
+    const url = new URL(source, 'https://example.test/');
+    assert.equal(url.hash, '');
+    assert.equal(url.search, '');
+    assert.ok(existsSync(path.join(f.root, decodeURIComponent(url.pathname))));
+  }
+});
+
+test('replacing media invalidates generated thumbnail pointers and retains their files', async t => {
+  const f = fixture(t);
+  const manifest = structuredClone(curated);
+  manifest.works[0].thumb = 'img/thumbs/photography-sample.webp';
+  mkdirSync(path.join(f.root, 'img/thumbs'), { recursive: true });
+  const thumb = path.join(f.root, manifest.works[0].thumb);
+  writeFileSync(thumb, 'retained old thumbnail');
+  f.write(manifest);
+  await sharp({
+    create: { width: 8, height: 6, channels: 3, background: 'blue' },
+  })
+    .png()
+    .toFile(path.join(f.root, 'input/sample.png'));
+  const result = f.run('ingest-media.mjs', [
+    path.join(f.root, 'input'),
+    '--category',
+    'Photography',
+  ]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.equal(f.read().works[0].thumb, undefined);
+  assert.equal(readFileSync(thumb, 'utf8'), 'retained old thumbnail');
 });
 
 test('a later ingest failure retains both catalog and previously referenced media bytes', async t => {

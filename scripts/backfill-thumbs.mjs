@@ -31,7 +31,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
 const WORKS_JSON = path.join(REPO_ROOT, 'data', 'works.json');
-const THUMB_DIR_REL = path.join('img', 'thumbs');
+const THUMB_DIR_REL = path.posix.join('img', 'thumbs');
 const THUMB_DIR = path.join(REPO_ROOT, THUMB_DIR_REL);
 
 // 512px covers the 250px grid box at 2× retina without over-sending bytes.
@@ -99,12 +99,12 @@ async function main() {
     }
 
     const name = thumbName(work.id);
-    const previousRel = work.thumb || path.join(THUMB_DIR_REL, name);
+    const previousRel = work.thumb || path.posix.join(THUMB_DIR_REL, name);
     const previousAbs = path.resolve(REPO_ROOT, previousRel);
     if (!previousAbs.startsWith(`${REPO_ROOT}${path.sep}`)) {
       throw new Error(`Thumbnail escapes the repository: ${work.id}`);
     }
-    const thumbRel = path.join(THUMB_DIR_REL, version, name);
+    const thumbRel = path.posix.join(THUMB_DIR_REL, version, name);
     const thumbAbs = path.join(REPO_ROOT, thumbRel);
 
     // Record intrinsic dimensions + thumb path on the entry regardless of
@@ -121,8 +121,8 @@ async function main() {
     if (!isStale(srcAbs, previousAbs)) {
       work.thumb = previousRel;
       if (work.type !== 'video') {
-        work.w = meta.width;
-        work.h = meta.height;
+        work.w = meta.autoOrient?.width ?? meta.width;
+        work.h = meta.autoOrient?.height ?? meta.height;
       }
       skipped++;
       continue;
@@ -137,13 +137,14 @@ async function main() {
     try {
       fs.mkdirSync(path.dirname(thumbAbs), { recursive: true });
       await sharp(srcAbs)
+        .autoOrient()
         .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
         .webp({ quality: THUMB_QUALITY })
         .toFile(thumbAbs);
       work.thumb = thumbRel;
       if (work.type !== 'video') {
-        work.w = meta.width;
-        work.h = meta.height;
+        work.w = meta.autoOrient?.width ?? meta.width;
+        work.h = meta.autoOrient?.height ?? meta.height;
       }
       generated++;
     } catch (err) {

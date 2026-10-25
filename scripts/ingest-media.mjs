@@ -45,7 +45,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import { spawnSync } from 'child_process';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 
 // ---------------------------------------------------------------------------
 // Resolve repo root from script location (scripts/ → parent)
@@ -100,7 +100,17 @@ function toSlug(str) {
  */
 function makeId(categorySlug, filename) {
   const base = path.basename(filename, path.extname(filename));
-  return `${categorySlug}-${toSlug(base)}`;
+  return `${categorySlug}-${outputStem(base)}`;
+}
+
+function outputStem(name) {
+  return (
+    toSlug(name) || createHash('sha256').update(name).digest('hex').slice(0, 16)
+  );
+}
+
+function relativeUrl(filename) {
+  return path.relative(REPO_ROOT, filename).split(path.sep).join('/');
 }
 
 /**
@@ -234,8 +244,8 @@ async function processImage(inputPath, outDir, baseName, sharp, dryRun) {
     });
   }
 
-  const origW = meta.width ?? null;
-  const origH = meta.height ?? null;
+  const origW = meta.autoOrient?.width ?? meta.width ?? null;
+  const origH = meta.autoOrient?.height ?? meta.height ?? null;
 
   // Determine which widths to emit (never upscale)
   const widths = RESPONSIVE_WIDTHS.filter(w => origW == null || w <= origW);
@@ -261,8 +271,8 @@ async function processImage(inputPath, outDir, baseName, sharp, dryRun) {
     const webpPath = path.join(outDir, webpName);
 
     // Paths relative to repo root for the JSON manifest
-    const avifRel = path.relative(REPO_ROOT, avifPath);
-    const webpRel = path.relative(REPO_ROOT, webpPath);
+    const avifRel = relativeUrl(avifPath);
+    const webpRel = relativeUrl(webpPath);
 
     if (dryRun) {
       console.log(`  [dry-run] would write ${avifRel}`);
@@ -270,10 +280,12 @@ async function processImage(inputPath, outDir, baseName, sharp, dryRun) {
     } else {
       try {
         await sharp(inputPath)
+          .autoOrient()
           .resize({ width: w, withoutEnlargement: true })
           .avif({ quality: 75 })
           .toFile(avifPath);
         await sharp(inputPath)
+          .autoOrient()
           .resize({ width: w, withoutEnlargement: true })
           .webp({ quality: 82 })
           .toFile(webpPath);
@@ -309,7 +321,7 @@ async function processImage(inputPath, outDir, baseName, sharp, dryRun) {
  * @returns {string|null}  relative poster path, or null on failure
  */
 function generatePoster(inputPath, posterPath, dryRun) {
-  const posterRel = path.relative(REPO_ROOT, posterPath);
+  const posterRel = relativeUrl(posterPath);
   if (dryRun) {
     console.log(`  [dry-run] would write poster ${posterRel}`);
     return posterRel;
@@ -376,7 +388,7 @@ function generatePoster(inputPath, posterPath, dryRun) {
  * @returns {{ hlsRel: string|null }}
  */
 function transcodeVideo(inputPath, outDir, dryRun) {
-  const hlsRel = path.relative(REPO_ROOT, path.join(outDir, 'master.m3u8'));
+  const hlsRel = relativeUrl(path.join(outDir, 'master.m3u8'));
   if (dryRun) {
     console.log(`  [dry-run] would transcode ${inputPath} → ${hlsRel}`);
     return { hlsRel };
@@ -462,9 +474,10 @@ async function main() {
   for (const filePath of files) {
     const ext = path.extname(filePath).toLowerCase();
     const filename = path.basename(filePath);
-    const baseName = path.basename(filePath, ext);
+    const originalStem = path.parse(filePath).name;
+    const baseName = outputStem(originalStem);
     const id = makeId(categorySlug, filename);
-    const title = baseName.replace(/[-_]+/g, ' ');
+    const title = originalStem.replace(/[-_]+/g, ' ');
 
     console.log(`Processing: ${filename} (id: ${id})`);
 
@@ -494,12 +507,11 @@ async function main() {
         entry.h = h;
         entry.srcset = srcset;
         entry.src =
-          largestWebp ??
-          path.relative(REPO_ROOT, path.join(outImgDir, filename));
+          largestWebp ?? relativeUrl(path.join(outImgDir, `${baseName}${ext}`));
       } else {
         // Fallback: copy original, no optimised variants
-        const destPath = path.join(outImgDir, filename);
-        const destRel = path.relative(REPO_ROOT, destPath);
+        const destPath = path.join(outImgDir, `${baseName}${ext}`);
+        const destRel = relativeUrl(destPath);
         if (!opts.dryRun) {
           if (!fs.existsSync(outImgDir))
             fs.mkdirSync(outImgDir, { recursive: true });

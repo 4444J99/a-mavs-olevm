@@ -109,6 +109,22 @@ test.describe('Visual Home front door', () => {
     await expect(first).toBeFocused();
   });
 
+  test('global search takes modal ownership from the viewer and remains editable', async ({
+    page,
+  }) => {
+    await page.locator('#works-grid .gallery-item').first().click();
+    await expect(page.locator('.lightbox')).toHaveClass(/active/);
+    await page.keyboard.press('Control+k');
+    await expect(page.locator('.lightbox')).not.toHaveClass(/active/);
+    await expect(page.locator('#searchModal')).toBeVisible();
+    await expect(page.locator('#globalSearchInput')).toBeFocused();
+    await page.locator('#globalSearchInput').fill('OGOD');
+    await expect(page.locator('#globalSearchResults')).toContainText(/OGOD/i);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#searchModal')).toBeHidden();
+    await expect(page.locator('#visual-home')).toBeVisible();
+  });
+
   test('filters actual works and opens the authored Studies then the labyrinth', async ({
     page,
   }) => {
@@ -204,6 +220,17 @@ test('HLS work uses the shared player, decodes actual segments, and releases on 
   await expect
     .poll(() => video.evaluate(element => element.readyState))
     .toBeGreaterThanOrEqual(2);
+  const bounds = await video.boundingBox();
+  const container = await page
+    .locator('.lightbox-image-container')
+    .boundingBox();
+  const viewport = page.viewportSize();
+  expect(bounds.x).toBeGreaterThanOrEqual(0);
+  expect(bounds.y).toBeGreaterThanOrEqual(0);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width + 1);
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewport.height + 1);
+  expect(bounds.width).toBeLessThanOrEqual(container.width + 1);
+  expect(bounds.height).toBeLessThanOrEqual(container.height + 1);
   await video.evaluate(element => {
     element.muted = true;
     return element.play();

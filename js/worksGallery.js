@@ -28,6 +28,7 @@
   };
 
   const els = {};
+  const imageSources = new WeakMap();
   let initPromise = null;
   let gridObserver = null;
   let hlsLoader = null;
@@ -233,7 +234,9 @@
     if (!img || img.getAttribute('src')) {
       return;
     }
-    const src = img.getAttribute('data-src');
+    // The manifest owns the source. Rendered DOM attributes are display state,
+    // never an input to a later interpretation as a resource URL.
+    const src = imageSources.get(img);
     if (!src) {
       return;
     }
@@ -270,6 +273,7 @@
       width: work.w || null,
       height: work.h || null,
     });
+    imageSources.set(img, work.thumb || work.poster || work.src);
     container.appendChild(img);
     item.appendChild(container);
 
@@ -578,5 +582,5 @@
     }
   }
 
-  window.WorksGallery = { init, destroy };
+  window.WorksGallery = { init, destroy, close: closeLightbox };
 })();

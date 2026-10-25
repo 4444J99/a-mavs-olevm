@@ -146,6 +146,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   e.preventDefault();
+  window.WorksGallery?.close?.();
   if (searchBootstrapPromise) {
     return;
   }

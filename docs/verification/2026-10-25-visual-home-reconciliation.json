@@ -1,6 +1,6 @@
 {
   "schema": "gmse.visual_home_reconciliation.v1",
-  "observed_at": "2026-10-25T22:43:00Z",
+  "observed_at": "2026-10-25T22:59:00Z",
   "original_pr": 100,
   "original_head": "90e7988d442dbab3d797082ee9ddf1d8875bb7e2",
   "original_merge_base": "f622f2754aad1c654f2ebfb23642c475ebdc40dc",
@@ -8,8 +8,8 @@
   "scope": "Original feature source and local engineering acceptance; hosted rollout and artist/device acceptance are separate.",
   "original_path_count": 248,
   "dispositions": {
-    "retained_with_repairs": 14,
-    "retained_exact": 234
+    "retained_with_repairs": 15,
+    "retained_exact": 233
   },
   "catalog": {
     "works": 227,
@@ -25,13 +25,13 @@
     "node": "24.19.0",
     "unit": {
       "files": 58,
-      "passed": 1478,
+      "passed": 1479,
       "failed": 0
     },
     "publication_and_media_pipeline": {
-      "passed": 31,
+      "passed": 34,
       "failed": 0,
-      "actual_cli_fixtures": 10
+      "actual_cli_fixtures": 13
     },
     "native_browsers": {
       "projects": [
@@ -40,7 +40,7 @@
         "Mobile Chrome"
       ],
       "navigation_startup_prerequisites_passed": 54,
-      "gallery_passed": 24,
+      "gallery_passed": 27,
       "gallery_includes_actual_hls_decoder_playback": true,
       "wcag_aa_gallery_and_viewer": true
     },
@@ -102,7 +102,7 @@
     {
       "path": "css/visual-home.css",
       "original_sha256": "9ef79b7a7d403481a593dc15eb56d0acae138aa639516448b0dc67d93a5fff0d",
-      "candidate_sha256": "0dad9b6b7d9c5f0083452a3f3c3a5f7b579af4b04566efa1cfd48590fd2159f7",
+      "candidate_sha256": "ae3fd23b32964b34e971d72626a6989c119eb876c082e67cfcc36f07bd350159",
       "disposition": "retained_with_repairs"
     },
     {
@@ -1494,7 +1494,7 @@
     {
       "path": "js/main.js",
       "original_sha256": "9c9f4c987e34c27b3a4131ae21f5f8d94aeb0ab713c7469622efab48a7ea6212",
-      "candidate_sha256": "6a04b20aafb413bd7e8131d903a69fd9374df7f57bf28d0689ed42d7fb5cf076",
+      "candidate_sha256": "93c0e12241c4337171aed6cc267b79104722dc4894f805a138cb1bb93b672c7e",
       "disposition": "retained_with_repairs"
     },
     {
@@ -1506,7 +1506,7 @@
     {
       "path": "js/worksGallery.js",
       "original_sha256": "6b32b4b2f80b4b24f5df3be549c2f5a125432b20b1ad32a80879256e8a2af74c",
-      "candidate_sha256": "a25fa5de732d1b03e6f0f58551a2469fb48aa007b9421edbab7141280e509c37",
+      "candidate_sha256": "e2f4eaaceab2e30032611aaca3d8a4446181a13bf4db1c8f842f5b00d543e6db",
       "disposition": "retained_with_repairs"
     },
     {
@@ -1524,20 +1524,20 @@
     {
       "path": "scripts/backfill-thumbs.mjs",
       "original_sha256": "2e5d82b4aa70e7f8640facf29b3543defc20d83dec076cf8bef26a54f3b5d17d",
-      "candidate_sha256": "2f7409af25489626bc0fdcaae9f69d13d0f1ee913710f7a6f9460c95f17bb646",
+      "candidate_sha256": "bdb05e47d564c44e6118af0deab25795e74ed6a9612187729054ad15aaee8452",
       "disposition": "retained_with_repairs"
     },
     {
       "path": "scripts/ingest-media.mjs",
       "original_sha256": "db0c8b3dfd5242aaff6f6c88774a5b112629cdf26b1d344c6296b58ddbd20815",
-      "candidate_sha256": "37e89b9d4265d7b79b047929573db8d513591fa6b1955bbf87c859e49732f35b",
+      "candidate_sha256": "ce3b04d780fd92afc4a662e8d1da6efdfea843e9cb2969b5053e10d143033b01",
       "disposition": "retained_with_repairs"
     },
     {
       "path": "scripts/make-og.mjs",
       "original_sha256": "ff23ed31c4d62afd16b3122c7f965f5e197780cc8c992c7e1f2e7c44d61090d9",
-      "candidate_sha256": "ff23ed31c4d62afd16b3122c7f965f5e197780cc8c992c7e1f2e7c44d61090d9",
-      "disposition": "retained_exact"
+      "candidate_sha256": "3cc8de4127346df96c3d4ed40451a9d036b7d79f3b59646c37869723aa3779f7",
+      "disposition": "retained_with_repairs"
     },
     {
       "path": "scripts/seed-works.mjs",
@@ -1560,13 +1560,13 @@
     {
       "path": "tests/e2e/visual-home.spec.js",
       "original_sha256": "d75a587894774ced926c1af11d94ed4aba8a20d90813fa6a59dee20cc00a9b09",
-      "candidate_sha256": "ba0a5bd01b7eae8dce9aa32c20f6092a17bb3728accb9707b33bb8a3cec0906c",
+      "candidate_sha256": "3acb0383b9eee9d5cbf41c526e521b0162075558c8c860d5c8168c2231fde04e",
       "disposition": "retained_with_repairs"
     },
     {
       "path": "tests/unit/worksGallery.test.js",
       "original_sha256": "bedb23424272d69bc20cdc581a7b2d5061b98b64af64b76e3168cdc6e21c677e",
-      "candidate_sha256": "2b588429afaf9d2120ba234d61d6eb8726f04df43c506d39799bc4e62fb191ea",
+      "candidate_sha256": "893acbefefcfff354cb7fc76476dd40fe0e04df895ca25eba222731b77250e74",
       "disposition": "retained_with_repairs"
     }
   ]

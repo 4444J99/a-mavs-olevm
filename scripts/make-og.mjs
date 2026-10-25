@@ -50,6 +50,7 @@ const overlay = `<svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.o
 </svg>`;
 
 const base = await sharp(srcPath)
+  .autoOrient()
   .resize(WIDTH, HEIGHT, { fit: 'cover', position: 'attention' })
   .toBuffer();
 

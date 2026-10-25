@@ -33,8 +33,8 @@ Publication admits the exact public works manifest and HLS media under
 `img/photos/`; unrelated data, TypeScript, tests and private material stay outside
 that boundary. Actual staging fixtures verify the output bytes and exclusions.
 
-Validation: 1,478 unit/toolchain cases in 58 files; 31 publication/pipeline cases
-(10 actual CLI fixtures); 54 native navigation/startup/prerequisite checks and 24
+Validation: 1,479 unit/toolchain cases in 58 files; 34 publication/pipeline cases
+(13 actual CLI fixtures); 54 native navigation/startup/prerequisite checks and 27
 gallery checks across Chromium, Firefox and Mobile Chrome. WCAG AA checks cover
 the gallery and open viewer. Lint, format, HTML and strict lock validation pass
 with historical warnings. Desktop and mobile captures were visually inspected.
@@ -52,3 +52,13 @@ retain their original 739,595-byte digest and are outside this change's index.
 This is source/local-browser evidence. Hosted publication, Safari/iPhone and
 artist/device acceptance remain distinct; the original carrier is retained until
 the successor is verified on fetched default.
+
+PR 191 follow-up accepted all six remote findings. Image and thumbnail encoding
+now apply EXIF orientation and publish oriented dimensions. Generated output
+names are URL-safe, including selected filenames containing reserved characters;
+replaced media invalidates generated thumbnail pointers while retaining old files
+and curated cover pointers outside the generated root. Lazy loading uses the
+manifest-owned source map rather than reinterpreting mutable DOM attributes.
+Native checks prove search takes modal ownership and remains editable, and video
+frames/controls fit the viewport. Packaging installs locked dependencies before
+the real-media tests. No finding was hidden by disabling a check or capability.

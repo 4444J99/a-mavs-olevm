@@ -288,6 +288,31 @@ describe('gallery lifecycle', () => {
     await expect(loadGallery().init()).rejects.toThrow(/manifest/i);
   });
 
+  it('loads the manifest source rather than reinterpreting a mutated DOM attribute', async () => {
+    let observe;
+    const observer = {
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback) {
+          observe = callback;
+          return observer;
+        }
+      }
+    );
+    mockFetch(MANIFEST);
+    await loadGallery().init();
+    const container = document.querySelector('.gallery-image-container');
+    const img = container.querySelector('img');
+    img.setAttribute('data-src', 'https://unexpected.example/reinterpreted');
+    observe([{ isIntersecting: true, target: container }], observer);
+    expect(img.getAttribute('src')).toBe('img/a.jpg');
+  });
+
   it('moves focus into the modal, traps Tab, and restores the opener', async () => {
     mockFetch(MANIFEST);
     await loadGallery().init();
