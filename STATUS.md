@@ -4,6 +4,15 @@ Evidence snapshot: 2026-09-13, surveyed `main`
 `477d62305943049f638be8fd46d74bd89f4d582f`.
 This is the starting record; later receipts must name their tested commit.
 
+
+## Green-progress receipt — 2026-10-25 (CodeQL)
+
+On success of workflow `CodeQL` (run 40188530417) for PR #183
+(`feat/gmse-t08-navigation-cache`) at exact head `f13f1195b98dd57f5e6c1afad74f02fd30220c45`
+(merged to main as `2a58378903cf17805454481efd827fe0bb7f8585`).
+Small documentation progress step recording the green CodeQL analysis on the current top-ranked navigation-recovery / cache-isolation / OGOD-verification integration.
+No code change beyond this receipt; no force-push; no bypass.
+
 ## Green-progress receipt — 2026-10-25
 
 On success of workflow `validate-dependencies` (run 40188169870) for PR #183
