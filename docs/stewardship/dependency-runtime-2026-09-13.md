@@ -42,4 +42,3 @@ Local verification on the candidate source using Node 24.19.0 / npm 11.9.0:
 The existing CI/CD Pipeline (workflow 184284863, `.github/workflows/ci-cd.yml`) is manually disabled. This patch updates that same file; it does not evade the control by introducing a replacement workflow. An authorized maintainer must enable it through GitHub. Browser end-to-end, accessibility, Lighthouse and deployed exact-commit verification remain outstanding; passing local unit tests does not substitute for them.
 
 Keep every family PR open and its branch intact. Link each member to #133 and the successor PR. Only after the successor is merged, its finish line verified on default, and unique residue accounted for may a preceding verdict comment authorize member closure. No issue is closed merely because this candidate exists.
-

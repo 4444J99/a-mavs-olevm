@@ -1,0 +1,512 @@
+{
+  "schema": "gmse.dependency_pr_reconciliation.v1",
+  "observed_at": "2026-10-25T18:36:24.623Z",
+  "owner": "https://github.com/4444J99/audiovisual-composition-system/issues/12",
+  "source_commit": "0ccb0adce1af34a63f71b7fecd3d21ffcbc9b669",
+  "runtime_repair_dependency": "151113cf13f2e50f2f327c8c3540dd2b26f4d9bd",
+  "node": "24.19.0",
+  "records": [
+    {
+      "pr": 122,
+      "original_head": "28298ac812b4286f15ccb8c06f36ee8fdb5e0099",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "socket.io-parser",
+          "requested_minimum": "4.2.7",
+          "actual": [
+            {
+              "path": "node_modules/socket.io-client/node_modules/socket.io-parser",
+              "version": "4.2.7"
+            },
+            {
+              "path": "node_modules/socket.io/node_modules/socket.io-parser",
+              "version": "4.2.7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 130,
+      "original_head": "33400d2745fa77a616778b944b9f0587e8e074af",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "@humanfs/node",
+          "requested_minimum": "0.16.8",
+          "actual": [
+            {
+              "path": "node_modules/@humanfs/node",
+              "version": "0.16.8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 132,
+      "original_head": "33e55ef8f16332554d81e1cd9c4b927c3c819e9f",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "js-yaml",
+          "requested_minimum": "4.3.2",
+          "actual": [
+            {
+              "path": "node_modules/js-yaml",
+              "version": "4.3.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 135,
+      "original_head": "ae1cf0e608eaf71debc52ae710c58b2e053d717d",
+      "disposition": "verified_successor_candidate_not_closed",
+      "intention": "Source-owned Node/CI floor, full-root audit, direct semver, scoped Immutable/parser repairs, stricter lock validator and complete toolchain tests retained; dated receipt preserved."
+    },
+    {
+      "pr": 148,
+      "original_head": "902ffdf205e588d66e1b70a2ee19b40166b5caba",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "immutable",
+          "requested_minimum": "3.8.4",
+          "actual": [
+            {
+              "path": "node_modules/immutable",
+              "version": "4.3.9"
+            }
+          ]
+        }
+      ],
+      "compatibility_note": "Scoped Immutable 4.3.9 replaces vulnerable 3.x through the PR135 compatibility design; actual BrowserSync HTML/UI/reload test passed."
+    },
+    {
+      "pr": 149,
+      "original_head": "2c0efc977fdcc35d36fcfb7bc186ee173506e1e5",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "brace-expansion",
+          "requested_minimum": "1.1.21",
+          "actual": [
+            {
+              "path": "node_modules/@eslint/config-array/node_modules/brace-expansion",
+              "version": "5.0.12"
+            },
+            {
+              "path": "node_modules/brace-expansion",
+              "version": "1.1.21"
+            },
+            {
+              "path": "node_modules/eslint/node_modules/brace-expansion",
+              "version": "5.0.12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 157,
+      "original_head": "89994de69bb389236b9c917ae534a7050633c34c",
+      "disposition": "verified_successor_candidate_not_closed",
+      "intention": "Four upstream-verified action revisions updated field-wise across current workflows without replacing current trusted-checkout/publication gates."
+    },
+    {
+      "pr": 159,
+      "original_head": "ba8867586f82898f52ecbcfc8f7a44ad59dd2e4c",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "source-map-js",
+          "requested_minimum": "1.2.2",
+          "actual": [
+            {
+              "path": "node_modules/source-map-js",
+              "version": "1.2.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 160,
+      "original_head": "43d512c4058ab6f5fd59fe583e689453c60ae330",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/synthwave-space",
+          "name": "source-map-js",
+          "requested_minimum": "1.2.2",
+          "actual": [
+            {
+              "path": "node_modules/source-map-js",
+              "version": "1.2.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 161,
+      "original_head": "517ee8e664671439215960797573ab7657bd75d0",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/p5js-playground",
+          "name": "source-map-js",
+          "requested_minimum": "1.2.2",
+          "actual": [
+            {
+              "path": "node_modules/source-map-js",
+              "version": "1.2.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 162,
+      "original_head": "5368d41a2fabbea0cea4b3781f6e025c0eb39306",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/audio-orb",
+          "name": "source-map-js",
+          "requested_minimum": "1.2.2",
+          "actual": [
+            {
+              "path": "node_modules/source-map-js",
+              "version": "1.2.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 163,
+      "original_head": "4ee823b8b2b8cfc2a4013cce595bfef047860ae4",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/gemini-ink-studio",
+          "name": "source-map-js",
+          "requested_minimum": "1.2.2",
+          "actual": [
+            {
+              "path": "node_modules/source-map-js",
+              "version": "1.2.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 166,
+      "original_head": "0db7cc1dfcbf6d2942fc491ced5365fe409be65d",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "vitest",
+          "requested_minimum": "5.0.5",
+          "actual": [
+            {
+              "path": "node_modules/vitest",
+              "version": "5.0.5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 169,
+      "original_head": "ea2d019f1fb83b10c805707537fa1141abb27e14",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/audio-orb",
+          "name": "vite",
+          "requested_minimum": "8.3.3",
+          "actual": [
+            {
+              "path": "node_modules/vite",
+              "version": "8.3.5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 171,
+      "original_head": "ed7fbd26811d9082f5ee0e1503a3d13283b4fad9",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/p5js-playground",
+          "name": "vite",
+          "requested_minimum": "8.3.3",
+          "actual": [
+            {
+              "path": "node_modules/vite",
+              "version": "8.3.5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 173,
+      "original_head": "e85ef19008ecbf74100cf01cf3b721d70a2b0c8c",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "undici",
+          "requested_minimum": "8.12.3",
+          "actual": [
+            {
+              "path": "node_modules/undici",
+              "version": "8.12.3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 177,
+      "original_head": "40cd32b5763fa2e5da2a04079e2a76bd9985716f",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": ".",
+          "name": "vite",
+          "requested_minimum": "8.3.5",
+          "actual": [
+            {
+              "path": "node_modules/vite",
+              "version": "8.3.5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 178,
+      "original_head": "8b852fd1ac1be511ba5587c62f510bcff67e52fb",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/gemini-ink-studio",
+          "name": "vite",
+          "requested_minimum": "8.3.5",
+          "actual": [
+            {
+              "path": "node_modules/vite",
+              "version": "8.3.5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 179,
+      "original_head": "17ca6ff9a3b774ae6020454a96735a5f6cfb777a",
+      "disposition": "verified_successor_candidate_not_closed",
+      "packages": [
+        {
+          "root": "absorb-alchemize/synthwave-space",
+          "name": "vite",
+          "requested_minimum": "8.3.5",
+          "actual": [
+            {
+              "path": "node_modules/vite",
+              "version": "8.3.5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pr": 180,
+      "original_head": "51f25ecfbff8e331f3ad263209c84c827e105447",
+      "disposition": "verified_successor_candidate_not_closed",
+      "intention": "All requested manifest updates across five directories retained; React peers resolve compatibly; P5 latest tags replaced by explicit compatible SDK/Lit ranges."
+    }
+  ],
+  "validation": {
+    "accessibility_consumer": {
+      "source_commit": "0054ee8459f09d8671041c27909c01dbfb5fef84",
+      "initial": {
+        "passed": 13,
+        "failed": 1,
+        "finding": "axe 4.14 label-content-name-mismatch: BANDCAMP SUPPORT text absent from the accessible name"
+      },
+      "repair": "Accessible name includes visible label; test setup uses production readiness, Escape and actual Enter site navigation instead of forced modal styles.",
+      "final": {
+        "project": "chromium",
+        "passed": 14,
+        "failed": 0,
+        "duration_seconds": 26.2
+      },
+      "limits": [
+        "Existing third-party and audioPlayer exclusions remain.",
+        "Existing weak focus and aria-live assertions remain; two undersized touch targets are diagnostic warnings only.",
+        "This is scoped consumer evidence, not full WCAG compliance or device/artistic acceptance."
+      ]
+    },
+    "native_startup_navigation": {
+      "projects": ["chromium", "firefox", "Mobile Chrome"],
+      "tests": 51,
+      "result": "passed",
+      "duration": "1.7 minutes",
+      "workers": 1
+    },
+    "html_validation": {
+      "exit": 0,
+      "existing_inline_style_warnings": 5
+    },
+    "frozen_root_install": "passed",
+    "strict_lock_validator": "all five graphs passed",
+    "unit_toolchain_governance": {
+      "files": 57,
+      "tests": 1433,
+      "result": "passed"
+    },
+    "lint_format": {
+      "exit": 0,
+      "existing_warnings": 56
+    },
+    "audit": {
+      "graphs": 5,
+      "vulnerabilities": 0
+    },
+    "publication_boundary_tests": {
+      "passed": 20
+    },
+    "build": {
+      "schemaVersion": 1,
+      "sourceCommit": "0ccb0adce1af34a63f71b7fecd3d21ffcbc9b669",
+      "node": "v24.19.0",
+      "npm": "11.17.0",
+      "runtimeStatus": "blocked-see-publication-needs",
+      "exhibits": {
+        "audio-orb": {
+          "command": "npm ci && npm run build -- --base=./",
+          "lockSha256": "2950889f4a4c0e5730b0eb2a060adbad5ce3d680c636a4019650b03003c18674",
+          "files": [
+            {
+              "path": "absorb-alchemize/audio-orb/dist/assets/index-BEsNtw0Y.js",
+              "bytes": 998147,
+              "sha256": "c57908222182a94879e51b1578908b37ae3cd713173f5517cd4bcc24831203dd"
+            },
+            {
+              "path": "absorb-alchemize/audio-orb/dist/assets/index-Ciei9MEJ.css",
+              "bytes": 61,
+              "sha256": "ea42997de3a145e88bfd1cf05c4cc5dff4f5317f8706ccd1beecf2aef2429c96"
+            },
+            {
+              "path": "absorb-alchemize/audio-orb/dist/index.html",
+              "bytes": 661,
+              "sha256": "d3e3231197e3cd2e389b870696a5c1dd7af1dc64f2f9019fc95ad51106e02c85"
+            },
+            {
+              "path": "absorb-alchemize/audio-orb/dist/piz_compressed.exr",
+              "bytes": 1836802,
+              "sha256": "7ff75b7f52379d579aa462c8a34b8321109023b9deb1d67a8b41d35f475c17b3"
+            }
+          ]
+        },
+        "gemini-ink-studio": {
+          "command": "npm ci && npm run build -- --base=./",
+          "lockSha256": "6e43f960789db86f612cc6268cf24761d86981addd8ffab3bf981b03b1033900",
+          "files": [
+            {
+              "path": "absorb-alchemize/gemini-ink-studio/dist/assets/favicon-CxIRGJUs.ico",
+              "bytes": 1033,
+              "sha256": "02518b8cbfdb639f567d9146f3f1186f40844d64fc489b24d45c311fb321d25d"
+            },
+            {
+              "path": "absorb-alchemize/gemini-ink-studio/dist/assets/index-ChFnwn4N.js",
+              "bytes": 655479,
+              "sha256": "4d3b26179d5f399210649ee08447f6d3e932db1f19c32fde829c6ab8110485db"
+            },
+            {
+              "path": "absorb-alchemize/gemini-ink-studio/dist/assets/index-x1XGuNl0.css",
+              "bytes": 1,
+              "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+            },
+            {
+              "path": "absorb-alchemize/gemini-ink-studio/dist/index.html",
+              "bytes": 1307,
+              "sha256": "954cd182e6d1b3fb503995a5da59dc37cd88221044af2ca6729c68b36b1dd9d2"
+            }
+          ]
+        },
+        "p5js-playground": {
+          "command": "npm ci && npm run build -- --base=./",
+          "lockSha256": "1783b2eabbc2162bf8e6b109b8635bfc4cd12e68c8917b2965c34958ec9e40d0",
+          "files": [
+            {
+              "path": "absorb-alchemize/p5js-playground/dist/assets/index-B5q2377g.js",
+              "bytes": 1380861,
+              "sha256": "a3b526131500720891b37296415463ed3f5a8c9786982e038c72180581868e8b"
+            },
+            {
+              "path": "absorb-alchemize/p5js-playground/dist/assets/index-B5rG0ghk.css",
+              "bytes": 9633,
+              "sha256": "10d703991cae4678498231395f203ac13e513832491fc93dd897a0c513f5287c"
+            },
+            {
+              "path": "absorb-alchemize/p5js-playground/dist/index.html",
+              "bytes": 956,
+              "sha256": "3459fd7c10da431e3bcc5ea0e15af3b95b4bc075f8fb2e3c15d90baff83051d1"
+            }
+          ]
+        },
+        "synthwave-space": {
+          "command": "npm ci && npm run build -- --base=./",
+          "lockSha256": "ed9188eabf4486a117fecff4451419cc474ccccca1f492237bf95985d0414bb4",
+          "files": [
+            {
+              "path": "absorb-alchemize/synthwave-space/dist/assets/index-CCqhg1t9.js",
+              "bytes": 613163,
+              "sha256": "1406d048127b9b97c74807facb6413c96d1b811be0475ec484768701f5b14261"
+            },
+            {
+              "path": "absorb-alchemize/synthwave-space/dist/assets/index-x1XGuNl0.css",
+              "bytes": 1,
+              "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+            },
+            {
+              "path": "absorb-alchemize/synthwave-space/dist/index.html",
+              "bytes": 585,
+              "sha256": "50c06047b8674679456398deaa863dff31ba0b49a4dae007aa1f79b3bb8b28ca"
+            },
+            {
+              "path": "absorb-alchemize/synthwave-space/dist/init/gemini2p5.html",
+              "bytes": 22559,
+              "sha256": "a96874111b920ec99d36eb7b209398f51c8ff93e606e80ed6f469ea7e68a8de7"
+            },
+            {
+              "path": "absorb-alchemize/synthwave-space/dist/init/gemini3.html",
+              "bytes": 25263,
+              "sha256": "cc8563be4b6d62acaecbfb71f020edd3a1f8fff926970ab7c0d819e1921011f7"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "acceptance_boundary": "Candidate code/packaging evidence only. Originals remain open until verified default integration and unique residue reconciliation; hosted, provider, artistic, device and custody acceptance are not claimed."
+}
