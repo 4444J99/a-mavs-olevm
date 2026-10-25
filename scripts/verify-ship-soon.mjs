@@ -264,6 +264,97 @@ export async function runShipSoonAudit(rootDir = process.cwd()) {
     detail: exhibitsDetail,
   });
 
+  // ─────────────────────────────────────────────────────────────
+  // 5. Range-slice and cache-eviction readiness (MediaServiceWorker.js)
+  // ─────────────────────────────────────────────────────────────
+  let rangeEvictionPass = false;
+  let rangeEvictionDetail = '';
+
+  const mswCandidate = path.join(
+    rootDir,
+    'js/media/cache/MediaServiceWorker.js'
+  );
+  if (existsSync(mswCandidate)) {
+    try {
+      const mswCode = readFileSync(mswCandidate, 'utf8');
+      const sandbox = {
+        self: {
+          location: { origin: 'https://etceter4.com', pathname: '/sw.js' },
+          addEventListener: () => {},
+        },
+        caches: {},
+        console: { warn: () => {}, error: () => {}, log: () => {} },
+        URL: globalThis.URL,
+        module: { exports: {} },
+        globalThis: {},
+      };
+      createContext(sandbox);
+      runInContext(mswCode, sandbox);
+
+      const evaluateRangeSlice =
+        sandbox.evaluateRangeSlice ||
+        sandbox.self?.evaluateRangeSlice ||
+        sandbox.module?.exports?.evaluateRangeSlice;
+      const planCacheEviction =
+        sandbox.planCacheEviction ||
+        sandbox.self?.planCacheEviction ||
+        sandbox.module?.exports?.planCacheEviction;
+
+      if (
+        typeof evaluateRangeSlice === 'function' &&
+        typeof planCacheEviction === 'function'
+      ) {
+        // Test evaluateRangeSlice with sample 206 and 416
+        const slice206 = evaluateRangeSlice(1000, 'bytes=0-499');
+        const slice416 = evaluateRangeSlice(1000, 'bytes=1500-2000');
+        const sliceSuffix = evaluateRangeSlice(1000, 'bytes=-100');
+
+        // Test planCacheEviction with sample LRU & pinned entries
+        const testEntries = [
+          { url: '/index.html', size: 100, isPinned: true },
+          { url: '/audio/track1.mp3', size: 500, lastAccessed: 10 },
+          { url: '/audio/track2.mp3', size: 500, lastAccessed: 20 },
+        ];
+        const evictionPlan = planCacheEviction(testEntries, 700);
+
+        const rangeValid =
+          slice206.status === 206 &&
+          slice206.contentLength === 500 &&
+          slice416.status === 416 &&
+          sliceSuffix.status === 206 &&
+          sliceSuffix.start === 900;
+
+        const evictionValid =
+          evictionPlan.evict.length === 1 &&
+          evictionPlan.evict[0].url === '/audio/track1.mp3' &&
+          evictionPlan.retain.some(e => e.url === '/index.html') &&
+          evictionPlan.totalBytesAfter <= 700;
+
+        if (rangeValid && evictionValid) {
+          rangeEvictionPass = true;
+          rangeEvictionDetail =
+            'evaluateRangeSlice (206/416) and planCacheEviction (LRU + pinned shell protection) verified';
+        } else {
+          rangeEvictionDetail =
+            'Range slice or eviction calculation failed verification assertions';
+        }
+      } else {
+        rangeEvictionDetail =
+          'MediaServiceWorker.js missing evaluateRangeSlice or planCacheEviction functions';
+      }
+    } catch (err) {
+      rangeEvictionDetail = `Failed verifying range slice & eviction: ${err.message}`;
+    }
+  } else {
+    rangeEvictionDetail = 'Missing js/media/cache/MediaServiceWorker.js';
+  }
+
+  checks.push({
+    name: 'Range-slice and cache-eviction readiness',
+    passed: rangeEvictionPass,
+    detail: rangeEvictionDetail,
+  });
+
   const ok = checks.every(c => c.passed);
   return { ok, checks };
 }
