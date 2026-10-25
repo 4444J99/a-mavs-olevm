@@ -63,6 +63,14 @@ class ExhibitPortal {
    * Initialize the portal in the given container element
    * @param {HTMLElement} container - The ergasterion content container
    */
+  init(container) {
+    return this.initialize(container);
+  }
+
+  /**
+   * Initialize the portal in the given container element
+   * @param {HTMLElement} container - The ergasterion content container
+   */
   initialize(container) {
     this.container = container;
 
@@ -132,6 +140,14 @@ class ExhibitPortal {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Activate an exhibit by ID (lifecycle alias for launchExhibit)
+   * @param {string} exhibitId
+   */
+  activate(exhibitId) {
+    return this.launchExhibit(exhibitId);
   }
 
   /**
@@ -234,6 +250,13 @@ class ExhibitPortal {
     }
   }
 
+  /**
+   * Deactivate currently active exhibit (lifecycle alias for closeExhibit)
+   */
+  deactivate() {
+    return this.closeExhibit();
+  }
+
   /** Close the current exhibit and return to gallery */
   closeExhibit() {
     if (this._loadTimeout) {
@@ -264,6 +287,44 @@ class ExhibitPortal {
     if (loading) {
       loading.innerHTML =
         '<p class="f5" style="color: #00ff00">Loading exhibit...</p>';
+    }
+  }
+
+  /**
+   * Get lifecycle status of an exhibit or current state
+   * @param {string} [exhibitId]
+   * @returns {Object}
+   */
+  getStatus(exhibitId) {
+    const target = exhibitId
+      ? this.exhibits.find(e => e.id === exhibitId)
+      : this.currentExhibit;
+    return {
+      activeId: this.currentExhibit ? this.currentExhibit.id : null,
+      targetId: target ? target.id : null,
+      status: this.currentExhibit
+        ? this.bridge?.isConnected
+          ? 'active'
+          : 'loading'
+        : 'ready',
+      isLocalFirst: true,
+      fallbackReady: true,
+    };
+  }
+
+  /**
+   * Render fallback for an exhibit (lifecycle method)
+   * @param {Object|string} exhibit
+   * @param {HTMLElement} [container]
+   * @param {string} [reason]
+   */
+  renderFallback(exhibit, _container, _reason) {
+    const targetExhibit =
+      typeof exhibit === 'string'
+        ? this.exhibits.find(e => e.id === exhibit)
+        : exhibit;
+    if (targetExhibit) {
+      this._showFallback(targetExhibit);
     }
   }
 
