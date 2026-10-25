@@ -396,12 +396,31 @@ function transcodeVideo(inputPath, outDir, dryRun) {
 
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
+  const encodeTimeoutSeconds = Number(
+    process.env.ETCETER4_VIDEO_ENCODE_TIMEOUT_SECONDS ?? 600
+  );
+  if (
+    !Number.isInteger(encodeTimeoutSeconds) ||
+    encodeTimeoutSeconds < 1 ||
+    encodeTimeoutSeconds > 1800
+  ) {
+    throw new Error(
+      'ETCETER4_VIDEO_ENCODE_TIMEOUT_SECONDS must be an integer from 1 to 1800'
+    );
+  }
+
   const result = spawnSync(
     process.execPath,
-    [TRANSCODE_SCRIPT, inputPath, outDir],
+    [
+      TRANSCODE_SCRIPT,
+      inputPath,
+      outDir,
+      '--encode-timeout-seconds',
+      String(encodeTimeoutSeconds),
+    ],
     {
       stdio: 'inherit',
-      timeout: 600000,
+      timeout: (encodeTimeoutSeconds + 60) * 1000,
       env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH}` },
     }
   );

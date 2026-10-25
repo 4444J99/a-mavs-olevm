@@ -195,6 +195,17 @@ body.lightbox-open {
   flex-shrink: 1;
 }
 
+#visual-home .lightbox-content {
+  height: 90vh;
+}
+
+#visual-home .lightbox-image-container img {
+  width: auto;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 #visual-home .lightbox-image-container video {
   display: block;
   width: auto;

@@ -33,8 +33,8 @@ Publication admits the exact public works manifest and HLS media under
 `img/photos/`; unrelated data, TypeScript, tests and private material stay outside
 that boundary. Actual staging fixtures verify the output bytes and exclusions.
 
-Validation: 1,479 unit/toolchain cases in 58 files; 34 publication/pipeline cases
-(13 actual CLI fixtures); 54 native navigation/startup/prerequisite checks and 27
+Validation: 1,479 unit/toolchain cases in 58 files; 36 publication/pipeline cases
+(14 actual CLI fixtures); 54 native navigation/startup/prerequisite checks and 30
 gallery checks across Chromium, Firefox and Mobile Chrome. WCAG AA checks cover
 the gallery and open viewer. Lint, format, HTML and strict lock validation pass
 with historical warnings. Desktop and mobile captures were visually inspected.
@@ -62,3 +62,15 @@ manifest-owned source map rather than reinterpreting mutable DOM attributes.
 Native checks prove search takes modal ownership and remains editable, and video
 frames/controls fit the viewport. Packaging installs locked dependencies before
 the real-media tests. No finding was hidden by disabling a check or capability.
+
+The second remote review's three findings are also repaired. An existing work's
+photo/video kind cannot change through media upsert, so its renderer and curation
+remain coherent. Portrait images fit the actual media area above long captions
+without clipping or changing aspect ratio, verified in all three browser projects.
+The transcoder's shared encode deadline defaults to 600 seconds and accepts
+`--encode-timeout-seconds` (1..1800) or the same value through
+`ETCETER4_VIDEO_ENCODE_TIMEOUT_SECONDS`. Ingest forwards that budget and gives
+the child one minute of shutdown margin. Variants and optional thumbnails share
+the remaining encode time; thumbnail failure makes the result unsuccessful.
+Invalid limits are rejected before output creation; a real HLS fixture validates
+a configured 300-second budget without spending that full time.

@@ -10,6 +10,46 @@ import { readFile } from 'node:fs/promises';
 
 test.use({ serviceWorkers: 'block' });
 
+test('portrait photographs fit the remaining media area above a long caption', async ({
+  page,
+}) => {
+  await page.route('**/data/works.json', route =>
+    route.fulfill({
+      json: {
+        version: 1,
+        works: [
+          {
+            id: 'portrait-proof',
+            type: 'photo',
+            src: 'img/photos/__portrait__.svg',
+            title: 'Portrait',
+            caption: 'Caption with authored detail. '.repeat(50),
+          },
+        ],
+      },
+    })
+  );
+  await page.route('**/__portrait__.svg', route =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="1000"><rect width="100" height="1000" fill="blue"/></svg>',
+    })
+  );
+  await page.goto('/');
+  await page.locator('#works-grid .gallery-item').click();
+  const image = page.locator('.lightbox-image-container img');
+  await expect
+    .poll(() => image.evaluate(element => element.naturalHeight))
+    .toBe(1000);
+  const bounds = await image.boundingBox();
+  const container = await page
+    .locator('.lightbox-image-container')
+    .boundingBox();
+  expect(bounds.height).toBeLessThanOrEqual(container.height + 1);
+  expect(bounds.width).toBeLessThanOrEqual(container.width + 1);
+  expect(bounds.height / bounds.width).toBeCloseTo(10, 1);
+});
+
 test.describe('Visual Home front door', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');

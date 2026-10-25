@@ -56,6 +56,11 @@ export function saveWorks(filename, manifest) {
 
 /** Reprocessing replaces generated media fields, never the artist's curation. */
 export function upsertGenerated(existing, generated) {
+  const existingKind = existing.type === 'video' ? 'video' : 'photo';
+  const generatedKind = generated.type === 'video' ? 'video' : 'photo';
+  if (existingKind !== generatedKind) {
+    throw new Error(`Incompatible media kind for existing work ${existing.id}`);
+  }
   const oldSource = existing.type === 'video' ? existing.poster : existing.src;
   const newSource =
     generated.type === 'video' ? generated.poster : generated.src;

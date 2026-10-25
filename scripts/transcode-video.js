@@ -18,6 +18,7 @@
  *   --thumbnails    Generate thumbnail VTT sprite
  *   --qualities     Comma-separated quality levels (default: 1080,720,480,360)
  *   --audio-only    Only transcode audio track (for audio-only content)
+ *   --encode-timeout-seconds  Whole encode budget, 1..1800 (default: 600)
  *
  * Output structure:
  *   output-dir/
@@ -176,7 +177,7 @@ function filterQualityPresets(sourceInfo, requestedQualities) {
  * @param {Object} preset - Quality preset
  * @returns {Promise<boolean>}
  */
-function generateVariant(inputPath, outputDir, preset) {
+function generateVariant(inputPath, outputDir, preset, timeoutMs) {
   return new Promise(resolve => {
     const segmentsDir = path.join(outputDir, 'segments');
     if (!fs.existsSync(segmentsDir)) {
@@ -229,7 +230,7 @@ function generateVariant(inputPath, outputDir, preset) {
 
     console.log(`  Encoding ${preset.name}...`);
 
-    const proc = spawn('ffmpeg', args, { timeout: 120000 });
+    const proc = spawn('ffmpeg', args, { timeout: timeoutMs });
     let stderr = '';
 
     proc.stderr.on('data', data => {
@@ -289,7 +290,7 @@ function generateMasterPlaylist(outputDir, variants) {
  * @param {Object} videoInfo - Video info from FFprobe
  * @returns {Promise<boolean>}
  */
-function generateThumbnails(inputPath, outputDir, videoInfo) {
+function generateThumbnails(inputPath, outputDir, videoInfo, timeoutMs) {
   return new Promise(resolve => {
     const duration = parseFloat(videoInfo.format.duration);
     const interval = 10; // Thumbnail every 10 seconds
@@ -315,7 +316,8 @@ function generateThumbnails(inputPath, outputDir, videoInfo) {
       path.join(thumbDir, 'thumb_%04d.jpg'),
     ];
 
-    const proc = spawn('ffmpeg', args);
+    const proc = spawn('ffmpeg', args, { timeout: timeoutMs });
+    proc.stderr.resume();
 
     proc.on('close', code => {
       if (code !== 0) {
@@ -381,6 +383,9 @@ function parseArgs() {
     thumbnails: false,
     qualities: [1080, 720, 480, 360],
     audioOnly: false,
+    encodeTimeoutSeconds: Number(
+      process.env.ETCETER4_VIDEO_ENCODE_TIMEOUT_SECONDS ?? 600
+    ),
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -392,6 +397,8 @@ function parseArgs() {
       options.qualities = args[++i].split(',').map(Number);
     } else if (arg === '--audio-only') {
       options.audioOnly = true;
+    } else if (arg === '--encode-timeout-seconds') {
+      options.encodeTimeoutSeconds = Number(args[++i]);
     } else if (!options.input) {
       options.input = arg;
     } else if (!options.output) {
@@ -407,6 +414,18 @@ function parseArgs() {
  */
 async function main() {
   const options = parseArgs();
+  if (
+    !Number.isInteger(options.encodeTimeoutSeconds) ||
+    options.encodeTimeoutSeconds < 1 ||
+    options.encodeTimeoutSeconds > 1800
+  ) {
+    throw new Error(
+      '--encode-timeout-seconds must be an integer from 1 to 1800'
+    );
+  }
+  const deadline = performance.now() + options.encodeTimeoutSeconds * 1000;
+  const remainingMs = () =>
+    Math.max(1, Math.ceil(deadline - performance.now()));
 
   if (!options.input || !options.output) {
     console.log(
@@ -419,6 +438,9 @@ async function main() {
       '  --qualities       Comma-separated quality levels (default: 1080,720,480,360)'
     );
     console.log('  --audio-only      Only transcode audio track');
+    console.log(
+      '  --encode-timeout-seconds  Whole encode budget, 1..1800 (default: 600)'
+    );
     console.log('');
     console.log('Example:');
     console.log(
@@ -471,10 +493,12 @@ async function main() {
   const successfulVariants = [];
 
   for (const preset of presets) {
+    if (performance.now() >= deadline) break;
     const success = await generateVariant(
       options.input,
       options.output,
-      preset
+      preset,
+      remainingMs()
     );
     if (success) {
       successfulVariants.push(preset);
@@ -488,9 +512,17 @@ async function main() {
   }
 
   // Generate thumbnails if requested
+  let thumbnailsSucceeded = true;
   if (options.thumbnails) {
     console.log('\nGenerating thumbnails...');
-    await generateThumbnails(options.input, options.output, videoInfo);
+    thumbnailsSucceeded =
+      performance.now() < deadline &&
+      (await generateThumbnails(
+        options.input,
+        options.output,
+        videoInfo,
+        remainingMs()
+      ));
   }
 
   // Summary
@@ -508,7 +540,9 @@ async function main() {
     console.log(`  ${options.output}/thumbnails.vtt`);
   }
 
-  process.exit(successfulVariants.length === presets.length ? 0 : 1);
+  process.exit(
+    successfulVariants.length === presets.length && thumbnailsSucceeded ? 0 : 1
+  );
 }
 
 // Run main function

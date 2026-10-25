@@ -14,6 +14,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import sharp from 'sharp';
+import { upsertGenerated } from '../../scripts/works-manifest.mjs';
 
 const repo = path.resolve(import.meta.dirname, '../..');
 function fixture(t) {
@@ -74,6 +75,66 @@ const curated = {
     },
   ],
 };
+
+test('generated media kind collisions leave both existing renderer and media unchanged', () => {
+  for (const [type, nextType] of [
+    ['photo', 'video'],
+    ['video', 'photo'],
+    [undefined, 'video'],
+  ]) {
+    const old = {
+      id: 'same',
+      type,
+      src: 'old',
+      thumb: 'img/thumbs/old.webp',
+      caption: 'Authored',
+    };
+    const before = structuredClone(old);
+    assert.throws(
+      () =>
+        upsertGenerated(old, { type: nextType, src: 'new', poster: 'poster' }),
+      /media kind/
+    );
+    assert.deepEqual(old, before);
+  }
+});
+
+test('transcoder validates configurable encode deadlines before producing output', t => {
+  const f = fixture(t);
+  const input = path.join(f.root, 'input/video.ts');
+  copyFileSync(
+    path.join(
+      repo,
+      'tests/media-fixtures/visual-home-hls/segments/360p_000.ts'
+    ),
+    input
+  );
+  for (const seconds of ['0', '-1', 'NaN', '1801']) {
+    const output = path.join(f.root, `out-${seconds}`);
+    const result = f.run('transcode-video.js', [
+      input,
+      output,
+      '--qualities',
+      '360',
+      '--encode-timeout-seconds',
+      seconds,
+    ]);
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stderr, /encode-timeout-seconds/);
+    assert.equal(existsSync(output), false);
+  }
+  const output = path.join(f.root, 'bounded-output');
+  const valid = f.run('transcode-video.js', [
+    input,
+    output,
+    '--qualities',
+    '360',
+    '--encode-timeout-seconds',
+    '300',
+  ]);
+  assert.equal(valid.status, 0, valid.stdout + valid.stderr);
+  assert.equal(existsSync(path.join(output, 'master.m3u8')), true);
+});
 
 test('the share-image CLI renders a real 1200 by 630 JPEG without changing its source', async t => {
   const f = fixture(t);

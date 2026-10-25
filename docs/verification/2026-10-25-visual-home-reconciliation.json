@@ -1,6 +1,6 @@
 {
   "schema": "gmse.visual_home_reconciliation.v1",
-  "observed_at": "2026-10-25T22:59:00Z",
+  "observed_at": "2026-10-25T23:37:33.491683+00:00",
   "original_pr": 100,
   "original_head": "90e7988d442dbab3d797082ee9ddf1d8875bb7e2",
   "original_merge_base": "f622f2754aad1c654f2ebfb23642c475ebdc40dc",
@@ -29,9 +29,9 @@
       "failed": 0
     },
     "publication_and_media_pipeline": {
-      "passed": 34,
+      "passed": 36,
       "failed": 0,
-      "actual_cli_fixtures": 13
+      "actual_cli_fixtures": 14
     },
     "native_browsers": {
       "projects": [
@@ -40,7 +40,7 @@
         "Mobile Chrome"
       ],
       "navigation_startup_prerequisites_passed": 54,
-      "gallery_passed": 27,
+      "gallery_passed": 30,
       "gallery_includes_actual_hls_decoder_playback": true,
       "wcag_aa_gallery_and_viewer": true
     },
@@ -102,7 +102,7 @@
     {
       "path": "css/visual-home.css",
       "original_sha256": "9ef79b7a7d403481a593dc15eb56d0acae138aa639516448b0dc67d93a5fff0d",
-      "candidate_sha256": "ae3fd23b32964b34e971d72626a6989c119eb876c082e67cfcc36f07bd350159",
+      "candidate_sha256": "f60b6638844a77473cf735add50f2567265ecc57dd5331b89f298c1effed824a",
       "disposition": "retained_with_repairs"
     },
     {
@@ -1530,7 +1530,7 @@
     {
       "path": "scripts/ingest-media.mjs",
       "original_sha256": "db0c8b3dfd5242aaff6f6c88774a5b112629cdf26b1d344c6296b58ddbd20815",
-      "candidate_sha256": "ce3b04d780fd92afc4a662e8d1da6efdfea843e9cb2969b5053e10d143033b01",
+      "candidate_sha256": "c1167a7a98f61e15321193494a793d18bc887795083625abd20c486727ea449f",
       "disposition": "retained_with_repairs"
     },
     {
@@ -1560,7 +1560,7 @@
     {
       "path": "tests/e2e/visual-home.spec.js",
       "original_sha256": "d75a587894774ced926c1af11d94ed4aba8a20d90813fa6a59dee20cc00a9b09",
-      "candidate_sha256": "3acb0383b9eee9d5cbf41c526e521b0162075558c8c860d5c8168c2231fde04e",
+      "candidate_sha256": "7576b7ede31805b12af42c4b4e8deca91656299b8c24f56d9975055a33d60b48",
       "disposition": "retained_with_repairs"
     },
     {
@@ -1569,5 +1569,18 @@
       "candidate_sha256": "893acbefefcfff354cb7fc76476dd40fe0e04df895ca25eba222731b77250e74",
       "disposition": "retained_with_repairs"
     }
-  ]
+  ],
+  "remote_review_followup_2": {
+    "accepted": [
+      "incompatible media-kind collisions",
+      "portrait overflow above captions",
+      "fixed two-minute encode deadline"
+    ],
+    "implemented": [
+      "reject kind changes before mutating existing records",
+      "definite viewer height and media-area-relative image bounds",
+      "configurable 1..1800-second whole-encode deadline default600; coordinated parent and thumbnail bounds"
+    ],
+    "validation": "Two new pipeline cases plus portrait test across all three native browser projects; all prior checks retained."
+  }
 }
