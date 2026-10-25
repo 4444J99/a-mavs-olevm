@@ -35,20 +35,12 @@ async function waitForJQueryReady(page, timeout = 10000) {
  * Call this before any navigation tests.
  */
 async function ensureSearchModalClosed(page) {
-  await page.evaluate(() => {
-    const modal = document.getElementById('searchModal');
-    if (modal) {
-      modal.classList.add('dn');
-      modal.classList.remove('db');
-      modal.style.pointerEvents = 'none';
-      // Also disable pointer events on all children
-      modal.querySelectorAll('*').forEach(el => {
-        el.style.pointerEvents = 'none';
-      });
-    }
-    // Restore body scroll if locked
-    document.body.style.overflow = '';
-  });
+  await expect
+    .poll(() => page.evaluate(() => window.etceter4Startup?.status))
+    .toBe('ready');
+  const modal = page.locator('#searchModal');
+  if (await modal.isVisible()) await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
 }
 
 /**
@@ -152,9 +144,8 @@ test.describe('Accessibility - Menu Navigation', () => {
     await waitForJQueryReady(page);
     await ensureSearchModalClosed(page);
 
-    // Navigate to menu by clicking on landing
-    await page.click('#landing');
-    await page.waitForTimeout(1000);
+    await page.getByRole('link', { name: 'Enter site', exact: true }).click();
+    await expect(page.locator('#menu')).toBeVisible();
   });
 
   test('should have accessible menu buttons', async ({ page }) => {
