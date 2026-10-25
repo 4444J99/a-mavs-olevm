@@ -278,7 +278,7 @@ function generateMasterPlaylist(outputDir, variants) {
     content += `${variant.name}.m3u8\n\n`;
   }
 
-  fs.writeFileSync(masterPath, content);
+  fs.writeFileSync(masterPath, `${content.trimEnd()}\n`);
   console.log(`  -> master.m3u8`);
 }
 
