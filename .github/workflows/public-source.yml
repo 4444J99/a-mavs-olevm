@@ -30,6 +30,10 @@ jobs:
           node-version: '24.19.0'
           cache: npm
       - run: npm ci
+      - name: Install the real media fixture toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
       - run: npm run validate:package-lock
       - run: npm run lint
       - run: npm run format:check
@@ -92,6 +96,10 @@ jobs:
         with:
           node-version: '24.19.0'
       - run: npm ci
+      - name: Install the real media fixture toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
       - run: npm run test:publication
       - run: npm run build:exhibits
       - run: npm run stage:public
