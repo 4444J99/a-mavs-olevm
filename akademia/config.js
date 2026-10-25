@@ -146,6 +146,45 @@ const akademiaConfig = {
         },
       ],
     },
+
+    studies: {
+      id: 'studies',
+      title: 'Studies',
+      description:
+        'Technique and process explorations: art-historical reference → exploration → artifact',
+      items: [
+        {
+          id: 'newtonian-forces-line-friction',
+          title: 'Force-Driven Line Systems',
+          subtitle:
+            'Applying Newtonian mechanics (wind, gravity, friction) to sixty independent line segments — each a mass obeying F=ma — until equilibrium dissolves into drift',
+          technique: 'Physics Simulation / p5.js instance mode',
+          reference: 'Paul Klee — Pedagogical Sketchbook (1925)',
+          result: 'line_friction.js — live sketch in Ergasterion',
+        },
+        {
+          id: 'perlin-noise-flow-fields',
+          title: 'Noise-Field Particle Studies',
+          subtitle:
+            'Sampling three-dimensional Perlin noise at each particle position to derive an angle of travel; the field evolves over time, producing organic, continuously varying flow without explicit rules for the shape',
+          technique: 'Perlin Noise Flow Fields / p5.js',
+          reference: 'Vera Molnár — algorithmic plotter drawings (1968–)',
+          result:
+            'Flow Fields #7 — Pinakotheke generative series; Ergasterion noise-field experiment',
+        },
+        {
+          id: 'audio-reactive-glsl-shaders',
+          title: 'Audio-Reactive GLSL Shaders',
+          subtitle:
+            'Routing live frequency bands (bass, mid, treble) and beat-detection pulses into WebGL uniform variables so the shader canvas breathes with the sound — visuals as real-time audiovisual instrument',
+          technique: 'Web Audio API → GLSL uniforms / p5.js WEBGL',
+          reference:
+            'Iannis Xenakis — UPIC graphical sound-composition system (1977)',
+          result:
+            'audioReactiveShader.js — AudioAnalyzerBridge integration in Ergasterion',
+        },
+      ],
+    },
   },
 
   /**

@@ -9,7 +9,7 @@ test.use({ serviceWorkers: 'block' });
 test('enter, content link, Escape and browser history change visible pages', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#landing');
   await page.getByRole('link', { name: 'Enter site', exact: true }).click();
   await expect(page.locator('#menu')).toBeVisible();
   await expect(page.locator('#landing')).toBeHidden();
@@ -120,7 +120,7 @@ test('first search shortcut initializes listeners, displays results, and Escape 
 
 test('missing Velocity retains usable navigation', async ({ page }) => {
   await page.route('**/*velocity*.js', route => route.abort());
-  await page.goto('/');
+  await page.goto('/#landing');
   await page.getByRole('link', { name: 'Enter site', exact: true }).click();
   await expect(page.locator('#menu')).toBeVisible();
   await page.locator('#toVisionPage').click();

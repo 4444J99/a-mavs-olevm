@@ -139,7 +139,9 @@ test.describe('Accessibility - Landing Page', () => {
 
 test.describe('Accessibility - Menu Navigation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    // #visual-home is the default view now; reach the landing intro via its
+    // hash so it is visible, then advance to the menu by clicking it.
+    await page.goto('/#landing');
     await page.waitForLoadState('domcontentloaded');
     await waitForJQueryReady(page);
     await ensureSearchModalClosed(page);

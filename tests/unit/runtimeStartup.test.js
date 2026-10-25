@@ -16,10 +16,11 @@ function runtime({
   missingDependency = null,
   searchLoad = () => Promise.resolve(),
   initialize = () => Promise.resolve(),
+  initializeHome = () => Promise.resolve(),
 } = {}) {
   const doc = document.implementation.createHTMLDocument('Startup');
   doc.body.innerHTML =
-    '<section id="landing" class="dn"></section><section id="bibliotheke" class="dn"></section>';
+    '<section id="visual-home" class="dn"></section><section id="landing" class="dn"></section><section id="bibliotheke" class="dn"></section>';
   const win = new EventTarget();
   Object.assign(win, {
     location: { hash, reload: vi.fn() },
@@ -27,11 +28,12 @@ function runtime({
     clearTimeout,
   });
   const landing = { id: '#landing', initPage: vi.fn(() => Promise.resolve()) };
+  const home = { id: '#visual-home', initPage: vi.fn(initializeHome) };
   const chamber = { id: '#bibliotheke', initPage: vi.fn(initialize) };
   class Page {
     static findPage(id) {
       if (missingData) throw new ReferenceError('pages is not defined');
-      const page = [landing, chamber].find(page => page.id === id);
+      const page = [landing, chamber, home].find(page => page.id === id);
       if (!page) throw new Error('Page not found');
       return page;
     }
@@ -122,6 +124,7 @@ function runtime({
     win,
     Page,
     landing,
+    home,
     chamber,
     pantheon,
     recover,
@@ -228,15 +231,54 @@ describe('production startup contract', () => {
       await settle();
       expect(app.win.etceter4Startup).toEqual({
         status: 'ready',
-        route: '#landing',
+        route: '#visual-home',
       });
-      expect(app.doc.getElementById('landing').classList.contains('dn')).toBe(
-        false
-      );
-      expect(app.pantheon).toHaveBeenCalledExactlyOnceWith('#landing');
+      expect(
+        app.doc.getElementById('visual-home').classList.contains('dn')
+      ).toBe(false);
+      expect(app.pantheon).toHaveBeenCalledExactlyOnceWith('#visual-home');
       expect(app.panel()).toBeNull();
     }
   );
+
+  it('waits for the default gallery before reporting ready', async () => {
+    let release;
+    const app = runtime({
+      initializeHome: () =>
+        new Promise(resolve => {
+          release = resolve;
+        }),
+    });
+    app.startMain();
+    app.runReady();
+    await settle();
+    expect(app.win.etceter4Startup.status).toBe('starting');
+    expect(app.home.initPage).toHaveBeenCalledOnce();
+    release();
+    await settle();
+    expect(app.win.etceter4Startup).toEqual({
+      status: 'ready',
+      route: '#visual-home',
+    });
+  });
+
+  it('recovers to landing when the default gallery cannot load', async () => {
+    const error = new Error('Manifest unavailable');
+    const app = runtime({ initializeHome: () => Promise.reject(error) });
+    const current = app.startMain();
+    app.runReady();
+    await settle();
+    expect(app.recover).toHaveBeenCalledExactlyOnceWith(
+      error,
+      app.landing,
+      '#visual-home'
+    );
+    expect(current()).toBe(app.landing);
+    expect(app.win.etceter4Startup).toEqual({
+      status: 'ready',
+      route: '#landing',
+    });
+  });
 
   it('waits for actual asynchronous initialization before reporting ready', async () => {
     let release;

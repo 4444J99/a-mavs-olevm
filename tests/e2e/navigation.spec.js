@@ -42,6 +42,7 @@ async function navigateToPage(page, pageHash, timeout = 10000) {
   await page.evaluate(targetPage => {
     // List of all known page sections
     const pageIds = [
+      'visual-home',
       'landing',
       'menu',
       'east-wing',
@@ -101,10 +102,17 @@ test.describe('Page Navigation', () => {
     await waitForJQueryReady(page);
   });
 
-  test('should display landing page initially', async ({ page }) => {
-    // Landing page should be visible
-    const landing = page.locator('#landing');
-    await expect(landing).toBeVisible();
+  test('should display the visual home initially', async ({ page }) => {
+    // The image-first front door is the default entry; the 3D landing is now a
+    // deeper room reachable at #landing.
+    const visualHome = page.locator('#visual-home');
+    await expect(visualHome).toBeVisible();
+    await expect(page.locator('#landing')).toBeHidden();
+  });
+
+  test('landing remains reachable via its hash', async ({ page }) => {
+    await navigateToPage(page, '#landing');
+    await expect(page.locator('#landing')).toBeVisible({ timeout: 10000 });
   });
 
   test('should navigate to menu from landing', async ({ page }) => {

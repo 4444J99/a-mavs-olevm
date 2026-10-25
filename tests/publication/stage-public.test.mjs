@@ -92,6 +92,10 @@ async function fixture() {
 test('allowlist keeps public media and attribution, excludes repository and authoring material', () => {
   for (const name of [
     'index.html',
+    'data/works.json',
+    'img/photos/video/master.m3u8',
+    'img/photos/video/segments/360p_000.ts',
+    'img/photos/video/segments/init.m4s',
     'img/photos/artwork/passing thru/IMG_0901.JPG',
     'ogod/ogodtracks/01 I.mp3',
     'audio/albums/config.js',
@@ -102,6 +106,11 @@ test('allowlist keeps public media and attribution, excludes repository and auth
     assert.equal(isPublicSource(name), true, name);
   for (const name of [
     'README.md',
+    'data/private.json',
+    'data/works.json/private.json',
+    'js/component.ts',
+    'video/authoring.ts',
+    'img/photos/../private.m3u8',
     '.git/config',
     'js/test/copy.js',
     'css/vendor/.git/config',
@@ -114,6 +123,31 @@ test('allowlist keeps public media and attribution, excludes repository and auth
     'js/../private.js',
   ])
     assert.equal(isPublicSource(name), false, name);
+});
+test('stages the exact works manifest and scoped HLS bytes while excluding unrelated data', async () => {
+  const f = await fixture();
+  const included = [
+    'data/works.json',
+    'img/photos/video/master.m3u8',
+    'img/photos/video/segments/360p_000.ts',
+  ];
+  const excluded = ['data/private.json', 'js/authoring.ts'];
+  for (const name of [...included, ...excluded]) {
+    const bytes = Buffer.from(`gallery:${name}`);
+    await f.put(name, bytes);
+    f.sourceFiles.push(name);
+    f.sourceBlobs[name] = gitBlobId(bytes);
+  }
+  const manifest = await stagePublic(f);
+  for (const name of included) {
+    assert.ok(manifest.files.some(file => file.path === name));
+    assert.equal(
+      await readFile(path.join(f.output, name), 'utf8'),
+      `gallery:${name}`
+    );
+  }
+  for (const name of excluded)
+    assert.ok(!manifest.files.some(file => file.path === name));
 });
 test('stages all four built exhibits at existing nested URLs with exact hashes', async () => {
   const f = await fixture();
@@ -416,7 +450,8 @@ test('publication needs check reports blocked status and explicit per-exhibit re
         'Needs a server-issued short-lived session credential and a no-credential entry state',
       'gemini-ink-studio':
         'Needs an approved server credential boundary for voice control',
-      'p5js-playground': 'Needs a server generation endpoint with abuse controls',
+      'p5js-playground':
+        'Needs a server generation endpoint with abuse controls',
       'synthwave-space':
         'Needs a server generation endpoint with abuse controls and a verified no-credential entry state',
     },
@@ -432,5 +467,8 @@ test('publication needs check reports blocked status and explicit per-exhibit re
   assert.match(result.message, /gemini-ink-studio: Needs an approved/);
   assert.match(result.message, /p5js-playground: Needs a server generation/);
   assert.match(result.message, /synthwave-space: Needs a server generation/);
-  assert.match(result.message, /https:\/\/github\.com\/organvm-ii-poiesis\/a-mavs-olevm\/issues\/94/);
+  assert.match(
+    result.message,
+    /https:\/\/github\.com\/organvm-ii-poiesis\/a-mavs-olevm\/issues\/94/
+  );
 });

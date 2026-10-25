@@ -41,6 +41,13 @@ const safePath = name =>
 export function isPublicSource(name) {
   if (!safePath(name)) return false;
   if (rootFiles.has(name)) return true;
+  // Gallery ingest emits HLS media here. Do not admit TypeScript or arbitrary
+  // data files elsewhere merely because transport segments use the .ts suffix.
+  if (
+    name.startsWith('img/photos/') &&
+    ['.m3u8', '.ts', '.m4s'].includes(path.posix.extname(name).toLowerCase())
+  )
+    return true;
   return (
     publicRoots.has(name.split('/')[0]) &&
     publicExtensions.has(path.posix.extname(name).toLowerCase()) &&

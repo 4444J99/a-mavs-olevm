@@ -45,6 +45,7 @@ function runtime(loader = { isRegistered: () => false }) {
     return elements.get(selector);
   };
   const win = {
+    dispatchEvent: vi.fn(() => true),
     history: { replaceState: vi.fn(), pushState: vi.fn() },
     location: { hash: '#landing' },
     matchMedia: () => ({ matches: false }),
@@ -190,6 +191,12 @@ describe('production navigation runtime', () => {
     expect(app.showNewSection('#menu')).toBe(true);
     await settle();
     expect(app.current()).toBe(menu);
+    expect(
+      app.win.dispatchEvent.mock.calls.map(([event]) => ({
+        type: event.type,
+        detail: event.detail,
+      }))
+    ).toEqual([{ type: 'etceter4:navigation', detail: { route: '#menu' } }]);
     expect(app.jquery('#landing').css('display')).toBe('none');
     expect(app.jquery('#menu').css('display')).toBe('block');
     expect(app.doc.getElementById('navigation-error')).toBeNull();

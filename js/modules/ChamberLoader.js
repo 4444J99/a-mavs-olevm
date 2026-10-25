@@ -66,6 +66,13 @@ class ChamberLoader {
     return this._manifests.has(chamberId);
   }
 
+  /** Return declared scripts without loading the chamber or exposing its registry. */
+  getScripts(chamberId) {
+    return (this._manifests.get(chamberId)?.scripts || []).map(script =>
+      typeof script === 'string' ? script : { ...script }
+    );
+  }
+
   /**
    * Check if a chamber's assets have been fully loaded.
    * @param {string} chamberId

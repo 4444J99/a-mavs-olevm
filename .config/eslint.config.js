@@ -10,6 +10,8 @@ export default [
       'js/page.js',
       'js/pageData.js',
       'js/images.js',
+      'js/worksGallery.js',
+      'js/modules/ChamberLoader.js',
       'js/diary.js',
       'js/ogod.js',
       'js/analytics.js',
@@ -188,6 +190,44 @@ export default [
     ],
     languageOptions: {
       sourceType: 'module',
+    },
+  },
+  {
+    files: [
+      'scripts/{ingest-media,seed-works,backfill-thumbs,works-manifest}.mjs',
+      'scripts/transcode-video.js',
+    ],
+    languageOptions: {
+      sourceType: 'module',
+      globals: { process: 'readonly', console: 'readonly' },
+    },
+  },
+  {
+    files: [
+      'tests/unit/{worksGallery,runtimeStartup}.test.js',
+      'tests/unit/modules/ChamberLoader.test.js',
+      'tests/e2e/visual-home.spec.js',
+    ],
+    languageOptions: {
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        console: 'readonly',
+        __dirname: 'readonly',
+        EventTarget: 'readonly',
+        Event: 'readonly',
+        CustomEvent: 'readonly',
+        KeyboardEvent: 'readonly',
+        HTMLMediaElement: 'readonly',
+        globalThis: 'readonly',
+        fetch: 'readonly',
+        getComputedStyle: 'readonly',
+        innerHeight: 'readonly',
+        URL: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+      },
     },
   },
   {

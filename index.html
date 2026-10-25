@@ -14,8 +14,8 @@
     />
     <meta name="author" content="ET CETER4" />
 
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://etceter4.com/" />
+    <!-- Canonical URL verified against the repository's current Pages identity. -->
+    <link rel="canonical" href="https://4444j99.github.io/generative-multimedia-spatial-environment/" />
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="ET CETER4" />
@@ -23,8 +23,11 @@
       property="og:description"
       content="Composer of sounds/words/images || explore the depths of our web labyrinth"
     />
-    <meta property="og:image" content="https://etceter4.com/img/og-image.jpg" />
-    <meta property="og:url" content="https://etceter4.com/" />
+    <meta
+      property="og:image"
+      content="https://4444j99.github.io/generative-multimedia-spatial-environment/img/og-image.jpg"
+    />
+    <meta property="og:url" content="https://4444j99.github.io/generative-multimedia-spatial-environment/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ET CETER4" />
 
@@ -35,7 +38,10 @@
       name="twitter:description"
       content="Composer of sounds/words/images || explore the depths of our web labyrinth"
     />
-    <meta name="twitter:image" content="https://etceter4.com/img/og-image.jpg" />
+    <meta
+      name="twitter:image"
+      content="https://4444j99.github.io/generative-multimedia-spatial-environment/img/og-image.jpg"
+    />
 
     <!-- Fonts(?) -->
 
@@ -50,6 +56,7 @@
     <link rel="stylesheet" href="css/living-animations.css" />
     <link rel="stylesheet" href="css/chamber-colors.css" />
     <link rel="stylesheet" href="css/gallery.css" />
+    <link rel="stylesheet" href="css/visual-home.css" />
     <link rel="stylesheet" href="css/timeline.css" />
 
     <!-- Video.js CSS -->
@@ -86,6 +93,29 @@
 
     <!-- All Pages-->
     <main id="pages" class="min-vh-100" aria-label="Main content">
+      <!-- Visual Home: image-first front door (default entry; the labyrinth below is preserved) -->
+      <section id="visual-home" class="dn min-vh-100 w-100" aria-label="Visual work — photography, video, multimedia">
+        <header id="works-hero" class="works-hero">
+          <h1 class="works-wordmark" data-profile="name">ETCETER4</h1>
+          <p class="works-statement" data-profile="statement">Photography · Video · Multimedia · Studies</p>
+          <nav class="works-hero-nav" aria-label="Visual home navigation">
+            <a
+              id="works-ig-link"
+              data-profile="instagram"
+              class="works-hero-link works-ig"
+              href="https://www.instagram.com/etceter4/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Instagram</a
+            >
+            <a class="works-hero-link" href="#akademia">Studies</a>
+            <a class="works-hero-link" href="#landing">Enter the labyrinth &rarr;</a>
+          </nav>
+        </header>
+        <div id="works-filters" class="gallery-filters" role="group" aria-label="Filter works by category"></div>
+        <div id="works-grid" class="gallery-grid" aria-live="polite"></div>
+      </section>
+
       <!-- Landing Page  -->
       <section id="landing" class="dn vh-100 w-100 pb-6rem">
         <!-- <h1 class="dn"> Landing Page </h1>  Used for HTML5 Outline  -->
@@ -803,6 +833,15 @@
           <p class="ma0 di">//</p>
           <a class="link white-link" href="#discovery">DISCOVERY</a>
           <p class="ma0 di">//</p>
+          <a
+            class="link white-link"
+            href="https://www.instagram.com/etceter4/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Follow on Instagram"
+            >INSTAGRAM</a
+          >
+          <p class="ma0 di">//</p>
           <a class="link white-link" href="http://eepurl.com/bPQueX" target="_blank" rel="noopener noreferrer"
             >MAILING LIST</a
           >
@@ -846,6 +885,7 @@
     <!-- Navigation and entry point -->
     <script src="js/page.js" defer></script>
     <script src="js/pageData.js" defer></script>
+    <script src="js/worksGallery.js" defer></script>
     <script src="js/main.js" defer></script>
     <!-- 3D Landing Compositor -->
     <script src="js/3d/core/SceneManager.js" defer></script>

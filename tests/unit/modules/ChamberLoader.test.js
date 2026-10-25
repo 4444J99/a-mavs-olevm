@@ -93,6 +93,22 @@ describe('ChamberLoader', () => {
   });
 
   describe('isLoaded()', () => {
+    it('returns copied script declarations without loading chamber assets', () => {
+      const loader = ChamberLoader.getInstance();
+      loader.register('video', {
+        scripts: [{ src: 'hls.js', integrity: 'pin' }, 'HLSLoader.js'],
+      });
+      const scripts = loader.getScripts('video');
+      scripts[0].integrity = 'changed';
+      scripts.push('untrusted.js');
+      expect(loader.getScripts('video')).toEqual([
+        { src: 'hls.js', integrity: 'pin' },
+        'HLSLoader.js',
+      ]);
+      expect(loader.getScripts('missing')).toEqual([]);
+      expect(loader.isLoaded('video')).toBe(false);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
     it('should return false for unloaded chambers', () => {
       const loader = ChamberLoader.getInstance();
       loader.register('test', { html: 'test.html' });

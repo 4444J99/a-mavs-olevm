@@ -18,6 +18,7 @@
  *   --thumbnails    Generate thumbnail VTT sprite
  *   --qualities     Comma-separated quality levels (default: 1080,720,480,360)
  *   --audio-only    Only transcode audio track (for audio-only content)
+ *   --encode-timeout-seconds  Whole encode budget, 1..1800 (default: 600)
  *
  * Output structure:
  *   output-dir/
@@ -35,9 +36,9 @@
 
 'use strict';
 
-const { execSync, spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execFileSync, spawn } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // Quality presets for HLS encoding
 const QUALITY_PRESETS = {
@@ -87,9 +88,9 @@ const HLS_CONFIG = {
  */
 function checkDependencies() {
   try {
-    execSync('ffmpeg -version', { stdio: 'pipe' });
+    execFileSync('ffmpeg', ['-version'], { stdio: 'pipe', timeout: 10000 });
     return true;
-  } catch (error) {
+  } catch {
     console.error('Error: FFmpeg is not installed.');
     console.error('Install it with:');
     console.error('  macOS: brew install ffmpeg');
@@ -106,9 +107,18 @@ function checkDependencies() {
  */
 function getVideoInfo(inputPath) {
   try {
-    const result = execSync(
-      `ffprobe -v quiet -print_format json -show_format -show_streams "${inputPath}"`,
-      { encoding: 'utf-8' }
+    const result = execFileSync(
+      'ffprobe',
+      [
+        '-v',
+        'quiet',
+        '-print_format',
+        'json',
+        '-show_format',
+        '-show_streams',
+        inputPath,
+      ],
+      { encoding: 'utf-8', timeout: 30000 }
     );
     return JSON.parse(result);
   } catch (error) {
@@ -149,7 +159,7 @@ function filterQualityPresets(sourceInfo, requestedQualities) {
       continue;
     }
 
-    const [width, height] = preset.resolution.split('x').map(Number);
+    const [, height] = preset.resolution.split('x').map(Number);
 
     // Only include if source is >= this quality
     if (sourceInfo.height >= height) {
@@ -167,8 +177,8 @@ function filterQualityPresets(sourceInfo, requestedQualities) {
  * @param {Object} preset - Quality preset
  * @returns {Promise<boolean>}
  */
-function generateVariant(inputPath, outputDir, preset) {
-  return new Promise((resolve, reject) => {
+function generateVariant(inputPath, outputDir, preset, timeoutMs) {
+  return new Promise(resolve => {
     const segmentsDir = path.join(outputDir, 'segments');
     if (!fs.existsSync(segmentsDir)) {
       fs.mkdirSync(segmentsDir, { recursive: true });
@@ -178,12 +188,18 @@ function generateVariant(inputPath, outputDir, preset) {
     const segmentPattern = path.join(segmentsDir, `${preset.name}_%03d.ts`);
 
     const args = [
+      '-threads',
+      '1',
+      '-filter_threads',
+      '1',
       '-i',
       inputPath,
       '-vf',
-      `scale=${preset.resolution}:force_original_aspect_ratio=decrease,pad=${preset.resolution}:(ow-iw)/2:(oh-ih)/2`,
+      `scale=${preset.resolution.replace('x', ':')}:force_original_aspect_ratio=decrease,pad=${preset.resolution.replace('x', ':')}:(ow-iw)/2:(oh-ih)/2`,
       '-c:v',
       'libx264',
+      '-threads',
+      '1',
       '-preset',
       'medium',
       '-crf',
@@ -204,6 +220,8 @@ function generateVariant(inputPath, outputDir, preset) {
       String(HLS_CONFIG.segmentDuration),
       '-hls_playlist_type',
       HLS_CONFIG.playlistType,
+      '-hls_base_url',
+      'segments/',
       '-hls_segment_filename',
       segmentPattern,
       '-y',
@@ -212,11 +230,11 @@ function generateVariant(inputPath, outputDir, preset) {
 
     console.log(`  Encoding ${preset.name}...`);
 
-    const proc = spawn('ffmpeg', args);
+    const proc = spawn('ffmpeg', args, { timeout: timeoutMs });
     let stderr = '';
 
     proc.stderr.on('data', data => {
-      stderr += data.toString();
+      stderr = (stderr + data.toString()).slice(-8000);
       // Parse progress from FFmpeg output
       const timeMatch = stderr.match(/time=(\d+:\d+:\d+\.\d+)/);
       if (timeMatch) {
@@ -231,6 +249,7 @@ function generateVariant(inputPath, outputDir, preset) {
         resolve(true);
       } else {
         console.error(`    Error encoding ${preset.name}`);
+        console.error(stderr.slice(-4000));
         resolve(false);
       }
     });
@@ -260,7 +279,7 @@ function generateMasterPlaylist(outputDir, variants) {
     content += `${variant.name}.m3u8\n\n`;
   }
 
-  fs.writeFileSync(masterPath, content);
+  fs.writeFileSync(masterPath, `${content.trimEnd()}\n`);
   console.log(`  -> master.m3u8`);
 }
 
@@ -271,8 +290,8 @@ function generateMasterPlaylist(outputDir, variants) {
  * @param {Object} videoInfo - Video info from FFprobe
  * @returns {Promise<boolean>}
  */
-function generateThumbnails(inputPath, outputDir, videoInfo) {
-  return new Promise((resolve, reject) => {
+function generateThumbnails(inputPath, outputDir, videoInfo, timeoutMs) {
+  return new Promise(resolve => {
     const duration = parseFloat(videoInfo.format.duration);
     const interval = 10; // Thumbnail every 10 seconds
     const thumbWidth = 160;
@@ -297,7 +316,8 @@ function generateThumbnails(inputPath, outputDir, videoInfo) {
       path.join(thumbDir, 'thumb_%04d.jpg'),
     ];
 
-    const proc = spawn('ffmpeg', args);
+    const proc = spawn('ffmpeg', args, { timeout: timeoutMs });
+    proc.stderr.resume();
 
     proc.on('close', code => {
       if (code !== 0) {
@@ -363,6 +383,9 @@ function parseArgs() {
     thumbnails: false,
     qualities: [1080, 720, 480, 360],
     audioOnly: false,
+    encodeTimeoutSeconds: Number(
+      process.env.ETCETER4_VIDEO_ENCODE_TIMEOUT_SECONDS ?? 600
+    ),
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -374,6 +397,8 @@ function parseArgs() {
       options.qualities = args[++i].split(',').map(Number);
     } else if (arg === '--audio-only') {
       options.audioOnly = true;
+    } else if (arg === '--encode-timeout-seconds') {
+      options.encodeTimeoutSeconds = Number(args[++i]);
     } else if (!options.input) {
       options.input = arg;
     } else if (!options.output) {
@@ -389,6 +414,18 @@ function parseArgs() {
  */
 async function main() {
   const options = parseArgs();
+  if (
+    !Number.isInteger(options.encodeTimeoutSeconds) ||
+    options.encodeTimeoutSeconds < 1 ||
+    options.encodeTimeoutSeconds > 1800
+  ) {
+    throw new Error(
+      '--encode-timeout-seconds must be an integer from 1 to 1800'
+    );
+  }
+  const deadline = performance.now() + options.encodeTimeoutSeconds * 1000;
+  const remainingMs = () =>
+    Math.max(1, Math.ceil(deadline - performance.now()));
 
   if (!options.input || !options.output) {
     console.log(
@@ -401,6 +438,9 @@ async function main() {
       '  --qualities       Comma-separated quality levels (default: 1080,720,480,360)'
     );
     console.log('  --audio-only      Only transcode audio track');
+    console.log(
+      '  --encode-timeout-seconds  Whole encode budget, 1..1800 (default: 600)'
+    );
     console.log('');
     console.log('Example:');
     console.log(
@@ -453,10 +493,12 @@ async function main() {
   const successfulVariants = [];
 
   for (const preset of presets) {
+    if (performance.now() >= deadline) break;
     const success = await generateVariant(
       options.input,
       options.output,
-      preset
+      preset,
+      remainingMs()
     );
     if (success) {
       successfulVariants.push(preset);
@@ -470,9 +512,17 @@ async function main() {
   }
 
   // Generate thumbnails if requested
+  let thumbnailsSucceeded = true;
   if (options.thumbnails) {
     console.log('\nGenerating thumbnails...');
-    await generateThumbnails(options.input, options.output, videoInfo);
+    thumbnailsSucceeded =
+      performance.now() < deadline &&
+      (await generateThumbnails(
+        options.input,
+        options.output,
+        videoInfo,
+        remainingMs()
+      ));
   }
 
   // Summary
@@ -490,7 +540,9 @@ async function main() {
     console.log(`  ${options.output}/thumbnails.vtt`);
   }
 
-  process.exit(0);
+  process.exit(
+    successfulVariants.length === presets.length && thumbnailsSucceeded ? 0 : 1
+  );
 }
 
 // Run main function
